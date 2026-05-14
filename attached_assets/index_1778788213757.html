@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vital Sleep Patch — AMC Revenue Upside Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #1E1B4B;
+      --violet: #7C3AED;
+      --violet-mid: #6D28D9;
+      --violet-light: #EDE9FE;
+      --violet-pale: #F5F3FF;
+      --grey-bg: #F5F5F7;
+      --grey-border: #E5E7EB;
+      --grey-text: #9CA3AF;
+      --dark-text: #111827;
+      --mid-text: #374151;
+      --white: #FFFFFF;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--grey-bg);
+      color: var(--dark-text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ─── Header ─────────────────────────────────────────── */
+    .header {
+      background: var(--navy);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--violet);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-logo svg { width: 20px; height: 20px; }
+    .header-title {
+      color: var(--white);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .header-subtitle {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.8rem;
+      font-weight: 400;
+      margin-top: 1px;
+    }
+
+    /* ─── Progress Bar ───────────────────────────────────── */
+    .progress-wrap {
+      background: var(--white);
+      border-bottom: 1px solid var(--grey-border);
+      padding: 0 40px;
+    }
+    .progress-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      align-items: stretch;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 24px 18px 0;
+      flex: 1;
+      cursor: default;
+      position: relative;
+    }
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 2px;
+      background: var(--grey-border);
+    }
+    .step.completed .step-num  { background: var(--navy); color: var(--white); }
+    .step.completed .step-label { color: var(--navy); font-weight: 600; }
+    .step.active   .step-num  { background: var(--violet); color: var(--white); }
+    .step.active   .step-label { color: var(--violet); font-weight: 700; }
+    .step.pending  .step-num  { background: var(--grey-border); color: var(--grey-text); }
+    .step.pending  .step-label { color: var(--grey-text); }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+    .step-label {
+      font-size: 0.8rem;
+      line-height: 1.2;
+      transition: color 0.3s;
+    }
+    .step-sublabel {
+      font-size: 0.7rem;
+      color: var(--grey-text);
+      font-weight: 400;
+    }
+
+    /* ─── Main Content ───────────────────────────────────── */
+    .main {
+      max-width: 760px;
+      margin: 40px auto 0;
+      padding: 0 20px;
+    }
+
+    /* ─── Screen ─────────────────────────────────────────── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .screen-header { margin-bottom: 28px; }
+    .screen-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--violet);
+      margin-bottom: 6px;
+    }
+    .screen-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    .screen-desc {
+      font-size: 0.92rem;
+      color: var(--mid-text);
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    /* ─── Card ───────────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 28px 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--grey-text);
+      margin-bottom: 20px;
+    }
+
+    /* ─── Input Field ────────────────────────────────────── */
+    .field {
+      margin-bottom: 24px;
+    }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--mid-text);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .field-hint {
+      font-size: 0.75rem;
+      color: var(--grey-text);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-prefix, .input-suffix {
+      position: absolute;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--grey-text);
+      pointer-events: none;
+      transition: color 0.2s;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .input-prefix { left: 14px; }
+    .input-suffix { right: 14px; }
+
+    input[type="number"] {
+      width: 100%;
+      height: 52px;
+      border: 1.5px solid var(--grey-border);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--navy);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="number"].has-prefix { padding: 0 14px 0 32px; }
+    input[type="number"].has-suffix { padding: 0 36px 0 14px; }
+    input[type="number"]:not(.has-prefix):not(.has-suffix) { padding: 0 14px; }
+    input[type="number"]:focus {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+    }
+    input[type="number"].is-default { color: var(--grey-text); }
+    input[type="number"].is-edited  { color: var(--navy); }
+    .input-wrap:focus-within .input-prefix,
+    .input-wrap:focus-within .input-suffix { color: var(--violet); }
+
+    /* ─── Two-column grid ────────────────────────────────── */
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 24px;
+    }
+
+    /* ─── Buttons ────────────────────────────────────────── */
+    .btn-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .btn {
+      padding: 13px 28px;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary {
+      background: var(--violet);
+      color: var(--white);
+      box-shadow: 0 2px 8px rgba(124,58,237,0.35);
+    }
+    .btn-primary:hover {
+      background: var(--violet-mid);
+      box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--mid-text);
+      border: 1.5px solid var(--grey-border);
+    }
+    .btn-ghost:hover { border-color: #9CA3AF; background: var(--grey-bg); }
+
+    /* ─── Results Screen ─────────────────────────────────── */
+    .headline-card {
+      background: linear-gradient(135deg, var(--navy) 0%, #312E81 100%);
+      border-radius: 20px;
+      padding: 36px 40px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .headline-card::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: rgba(124,58,237,0.25);
+      border-radius: 50%;
+    }
+    .headline-card::after {
+      content: '';
+      position: absolute;
+      bottom: -40px; left: -40px;
+      width: 140px; height: 140px;
+      background: rgba(124,58,237,0.15);
+      border-radius: 50%;
+    }
+    .headline-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 10px;
+      position: relative; z-index: 1;
+    }
+    .headline-amount {
+      font-size: 3.6rem;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 6px;
+      position: relative; z-index: 1;
+    }
+    .headline-sub {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.55);
+      position: relative; z-index: 1;
+    }
+    .headline-tests {
+      display: inline-block;
+      margin-top: 16px;
+      background: rgba(124,58,237,0.4);
+      border: 1px solid rgba(124,58,237,0.5);
+      color: rgba(255,255,255,0.9);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 6px;
+      position: relative; z-index: 1;
+    }
+
+    /* ─── Results table ──────────────────────────────────── */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .results-table th {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--grey-text);
+      text-align: left;
+      padding: 0 0 12px;
+      border-bottom: 1px solid var(--grey-border);
+    }
+    .results-table th:last-child { text-align: right; }
+    .results-table td {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--grey-border);
+      font-size: 0.9rem;
+      vertical-align: top;
+    }
+    .results-table td:first-child { font-weight: 600; color: var(--navy); width: 32%; }
+    .results-table td:nth-child(2) {
+      font-size: 0.8rem;
+      color: var(--grey-text);
+      padding-right: 16px;
+    }
+    .results-table td:last-child {
+      text-align: right;
+      font-weight: 700;
+      color: var(--dark-text);
+      white-space: nowrap;
+    }
+    .results-table tr.total-row td {
+      border-top: 2px solid var(--violet);
+      border-bottom: none;
+      padding-top: 16px;
+    }
+    .results-table tr.total-row td:first-child { color: var(--violet); font-size: 0.95rem; }
+    .results-table tr.total-row td:last-child { color: var(--violet); font-size: 1.05rem; }
+
+    /* ─── Color dots ─────────────────────────────────────── */
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      flex-shrink: 0;
+      vertical-align: middle;
+      position: relative; top: -1px;
+    }
+
+    /* ─── Chart container ────────────────────────────────── */
+    .chart-wrap {
+      position: relative;
+      height: 240px;
+      padding: 8px 0 0;
+    }
+
+    /* ─── Disclaimer ─────────────────────────────────────── */
+    .disclaimer {
+      font-size: 0.75rem;
+      color: var(--grey-text);
+      line-height: 1.6;
+      text-align: center;
+      margin-top: 20px;
+      padding: 0 20px;
+    }
+
+    /* ─── Results action row ─────────────────────────────── */
+    .results-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    /* ─── Insight pill ───────────────────────────────────── */
+    .insight-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .insight-pill {
+      flex: 1;
+      min-width: 160px;
+      background: var(--violet-pale);
+      border: 1px solid var(--violet-light);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+    .insight-pill-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--violet);
+      margin-bottom: 4px;
+    }
+    .insight-pill-value {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.03em;
+    }
+
+    /* ─── Print ──────────────────────────────────────────── */
+    @media print {
+      .header, .progress-wrap, .btn-row, .results-actions { display: none !important; }
+      body { background: white; padding: 0; }
+      .main { max-width: 100%; margin: 20px; padding: 0; }
+      .screen { display: block !important; }
+      #screen1, #screen2 { display: none !important; }
+      .card { box-shadow: none; border: 1px solid #eee; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Header ────────────────────────────────────────────── -->
+<div class="header">
+  <div class="header-logo">
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 3 L10 17 M5 8 L10 3 L15 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M3 13 Q5 10 7 13 Q9 16 10 13 Q11 10 13 13 Q15 16 17 13" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div>
+    <div class="header-title">Vital Sleep Patch</div>
+    <div class="header-subtitle">AMC Revenue Upside Calculator</div>
+  </div>
+</div>
+
+<!-- ─── Progress Bar ──────────────────────────────────────── -->
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-inner">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-label">Your Lab</div>
+        <div class="step-sublabel">Current capacity</div>
+      </div>
+    </div>
+    <div class="step pending" id="step2">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-label">Revenue Inputs</div>
+        <div class="step-sublabel">Fees & downstream</div>
+      </div>
+    </div>
+    <div class="step pending" id="step3">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-label">Results</div>
+        <div class="step-sublabel">Your upside</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Main ──────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- ─── Screen 1 ─── -->
+  <div class="screen active" id="screen1">
+    <div class="screen-header">
+      <div class="screen-eyebrow">Step 1 of 3</div>
+      <div class="screen-title">Tell us about your lab today</div>
+      <div class="screen-desc">
+        The Vital Sleep Patch creates a <strong>parallel pathway</strong> for children on your waitlist —
+        your existing in-lab PSG program continues at full capacity. Let's start with where you are now.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Current Lab Capacity</div>
+      <div class="field-grid">
+        <div class="field">
+          <label class="field-label" for="psg_volume">Annual pediatric PSG volume</label>
+          <span class="field-hint">In-lab studies per year</span>
+          <div class="input-wrap">
+            <input type="number" id="psg_volume" class="is-default" data-default="1000" value="1000" min="0" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="waitlist">Current waitlist length</label>
+          <span class="field-hint">Patients waiting for a PSG</span>
+          <div class="input-wrap">
+            <input type="number" id="waitlist" class="is-default" data-default="500" value="500" min="0" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">At-Home Eligibility</div>
+      <div class="field">
+        <label class="field-label" for="eligibility">Home-test eligibility rate</label>
+        <span class="field-hint">
+          % of waitlisted children who are good candidates for at-home diagnosis
+          (typically children with straightforward suspected OSA, without severe comorbidities)
+        </span>
+        <div class="input-wrap">
+          <input type="number" id="eligibility" class="has-suffix is-default" data-default="60" value="60" min="0" max="100" />
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goTo(2)">Next: Revenue Inputs &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ─── Screen 2 ─── -->
+  <div class="screen" id="screen2">
+    <div class="screen-header">
+      <div class="screen-eyebrow">Step 2 of 3</div>
+      <div class="screen-title">Revenue waiting to be unlocked</div>
+      <div class="screen-desc">
+        Each Vital-diagnosed patient generates multiple revenue events. Enter your institution's
+        rates below — we've pre-filled national benchmarks to get you started.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Per-Test Revenue</div>
+      <div class="field-grid">
+        <div class="field">
+          <label class="field-label" for="interp_fee">Interpretation fee per Vital study</label>
+          <span class="field-hint">Physician read of the at-home test result</span>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input type="number" id="interp_fee" class="has-prefix is-default" data-default="200" value="200" min="0" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="consult_fee">Follow-up consult revenue</label>
+          <span class="field-hint">Per diagnosed patient post-result</span>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input type="number" id="consult_fee" class="has-prefix is-default" data-default="300" value="300" min="0" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Downstream Treatment Revenue</div>
+      <div class="field-grid">
+        <div class="field">
+          <label class="field-label" for="referral_rate">Referral rate for downstream treatment</label>
+          <span class="field-hint">% of Vital-diagnosed patients referred for T&amp;A, PAP titration, etc.</span>
+          <div class="input-wrap">
+            <input type="number" id="referral_rate" class="has-suffix is-default" data-default="60" value="60" min="0" max="100" />
+            <span class="input-suffix">%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="treatment_rev">Avg. downstream treatment revenue</label>
+          <span class="field-hint">Per referred patient (T&amp;A surgery, PAP, etc.)</span>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input type="number" id="treatment_rev" class="has-prefix is-default" data-default="4000" value="4000" min="0" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ongoing Monitoring Revenue</div>
+      <div class="field-grid">
+        <div class="field">
+          <label class="field-label" for="monitoring_rev">Annual monitoring revenue per patient</label>
+          <span class="field-hint">Follow-up visits, retests, and check-ins per year</span>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input type="number" id="monitoring_rev" class="has-prefix is-default" data-default="250" value="250" min="0" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="years">Years of follow-up to model</label>
+          <span class="field-hint">How far out should we project monitoring revenue?</span>
+          <div class="input-wrap">
+            <input type="number" id="years" class="is-default" data-default="3" value="3" min="1" max="10" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goTo(1)">&larr; Back</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Calculate My Upside &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ─── Screen 3 ─── -->
+  <div class="screen" id="screen3">
+    <div class="screen-header">
+      <div class="screen-eyebrow">Step 3 of 3</div>
+      <div class="screen-title">Your estimated revenue upside</div>
+      <div class="screen-desc">
+        Based on your inputs, here is the incremental revenue your institution could capture
+        by deploying the Vital Sleep Patch as a parallel diagnostic pathway.
+      </div>
+    </div>
+
+    <!-- Headline -->
+    <div class="headline-card">
+      <div class="headline-label">Total Revenue Upside</div>
+      <div class="headline-amount" id="totalDisplay">$0</div>
+      <div class="headline-sub" id="periodDisplay">Over 3 years of follow-up modeling</div>
+      <div class="headline-tests" id="testsDisplay">— Vital tests / year</div>
+    </div>
+
+    <!-- Insight pills -->
+    <div class="insight-row">
+      <div class="insight-pill">
+        <div class="insight-pill-label">Annual recurring</div>
+        <div class="insight-pill-value" id="annualDisplay">$0</div>
+      </div>
+      <div class="insight-pill">
+        <div class="insight-pill-label">Per-test revenue</div>
+        <div class="insight-pill-value" id="perTestDisplay">$0</div>
+      </div>
+      <div class="insight-pill">
+        <div class="insight-pill-label">Tests per year</div>
+        <div class="insight-pill-value" id="vitalTestsDisplay">0</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-title">Revenue Breakdown</div>
+      <div class="chart-wrap">
+        <canvas id="revenueChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="card-title">Line-Item Detail</div>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Line Item</th>
+            <th>Formula</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <p class="disclaimer">
+      These are estimates based on your inputs. Actual results will vary depending on payer mix,
+      coding and reimbursement timelines, patient case complexity, and clinical workflows.
+      This calculator is intended for illustrative purposes only.
+    </p>
+
+    <div class="results-actions">
+      <button class="btn btn-ghost" onclick="startOver()">&#8635; Start Over</button>
+      <button class="btn btn-primary" onclick="window.print()">&#128438; Print / Save as PDF</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+  // ─── Defaults ────────────────────────────────────────────
+  const DEFAULTS = {
+    psg_volume:    1000,
+    waitlist:       500,
+    eligibility:     60,
+    interp_fee:     200,
+    consult_fee:    300,
+    referral_rate:   60,
+    treatment_rev: 4000,
+    monitoring_rev: 250,
+    years:            3,
+  };
+
+  let chart = null;
+  let currentScreen = 1;
+
+  // ─── Input state management ───────────────────────────────
+  function getVal(id) {
+    const el = document.getElementById(id);
+    const v = parseFloat(el.value);
+    return isNaN(v) ? DEFAULTS[id] : v;
+  }
+
+  function setupInputs() {
+    Object.keys(DEFAULTS).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      el.addEventListener('focus', function() {
+        if (this.classList.contains('is-default')) {
+          this.select();
+        }
+      });
+
+      el.addEventListener('input', function() {
+        const v = parseFloat(this.value);
+        if (isNaN(v) || v === DEFAULTS[id]) {
+          this.classList.add('is-default');
+          this.classList.remove('is-edited');
+        } else {
+          this.classList.remove('is-default');
+          this.classList.add('is-edited');
+        }
+      });
+
+      el.addEventListener('blur', function() {
+        if (this.value === '' || isNaN(parseFloat(this.value))) {
+          this.value = DEFAULTS[id];
+          this.classList.add('is-default');
+          this.classList.remove('is-edited');
+        }
+      });
+    });
+  }
+
+  // ─── Navigation ───────────────────────────────────────────
+  function goTo(n) {
+    document.getElementById('screen' + currentScreen).classList.remove('active');
+    currentScreen = n;
+    document.getElementById('screen' + n).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (n === 3) renderResults();
+  }
+
+  function updateProgress() {
+    [1, 2, 3].forEach(i => {
+      const el = document.getElementById('step' + i);
+      el.classList.remove('active', 'completed', 'pending');
+      if (i < currentScreen)      el.classList.add('completed');
+      else if (i === currentScreen) el.classList.add('active');
+      else                          el.classList.add('pending');
+    });
+  }
+
+  function startOver() {
+    Object.keys(DEFAULTS).forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.value = DEFAULTS[id];
+      el.classList.add('is-default');
+      el.classList.remove('is-edited');
+    });
+    if (chart) { chart.destroy(); chart = null; }
+    goTo(1);
+  }
+
+  // ─── Calculations ─────────────────────────────────────────
+  function calculate() {
+    const waitlist      = getVal('waitlist');
+    const eligibility   = getVal('eligibility') / 100;
+    const interpFee     = getVal('interp_fee');
+    const consultFee    = getVal('consult_fee');
+    const referralRate  = getVal('referral_rate') / 100;
+    const treatmentRev  = getVal('treatment_rev');
+    const monitoringRev = getVal('monitoring_rev');
+    const years         = getVal('years');
+
+    const vitalTests     = waitlist * eligibility;
+    const interpRevenue  = vitalTests * interpFee;
+    const consultRevenue = vitalTests * consultFee;
+    const treatRevenue   = vitalTests * referralRate * treatmentRev;
+    const monitorRevenue = vitalTests * monitoringRev * years;
+    const total          = interpRevenue + consultRevenue + treatRevenue + monitorRevenue;
+
+    return { vitalTests, interpRevenue, consultRevenue, treatRevenue, monitorRevenue, total, years, interpFee, consultFee, referralRate, treatmentRev, monitoringRev, waitlist, eligibility };
+  }
+
+  // ─── Format helpers ───────────────────────────────────────
+  function fmt(n) {
+    if (n >= 1e6) return '$' + (n / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+    if (n >= 1e3) return '$' + (n / 1e3).toFixed(1).replace(/\.?0+$/, '') + 'K';
+    return '$' + Math.round(n).toLocaleString();
+  }
+  function fmtFull(n) {
+    return '$' + Math.round(n).toLocaleString();
+  }
+  function pct(n) { return (n * 100).toFixed(0) + '%'; }
+  function num(n) { return Math.round(n).toLocaleString(); }
+
+  // ─── Render results ───────────────────────────────────────
+  function renderResults() {
+    const c = calculate();
+
+    // Headline
+    document.getElementById('totalDisplay').textContent = fmtFull(c.total);
+    document.getElementById('periodDisplay').textContent =
+      `Over ${c.years} year${c.years !== 1 ? 's' : ''} of follow-up modeling`;
+    document.getElementById('testsDisplay').textContent =
+      `${num(c.vitalTests)} Vital tests / year`;
+
+    // Insight pills
+    const annual = c.interpRevenue + c.consultRevenue + c.treatRevenue + c.vitalTests * c.monitoringRev;
+    document.getElementById('annualDisplay').textContent = fmt(annual);
+    document.getElementById('perTestDisplay').textContent = fmt(c.interpFee + c.consultFee);
+    document.getElementById('vitalTestsDisplay').textContent = num(c.vitalTests);
+
+    // Table
+    const rows = [
+      {
+        label: 'Interpretation Revenue',
+        dot: '#7C3AED',
+        formula: `${num(c.vitalTests)} tests × ${fmtFull(c.interpFee)}`,
+        value: c.interpRevenue,
+      },
+      {
+        label: 'Follow-Up Consult Revenue',
+        dot: '#4F46E5',
+        formula: `${num(c.vitalTests)} tests × ${fmtFull(c.consultFee)}`,
+        value: c.consultRevenue,
+      },
+      {
+        label: 'Downstream Treatment Revenue',
+        dot: '#1E1B4B',
+        formula: `${num(c.vitalTests)} tests × ${pct(c.referralRate)} referral × ${fmtFull(c.treatmentRev)}`,
+        value: c.treatRevenue,
+      },
+      {
+        label: 'Monitoring Revenue',
+        dot: '#A78BFA',
+        formula: `${num(c.vitalTests)} tests × ${fmtFull(c.monitoringRev)}/yr × ${c.years} yrs`,
+        value: c.monitorRevenue,
+      },
+    ];
+
+    const tbody = document.getElementById('resultsBody');
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td><span class="dot" style="background:${r.dot}"></span>${r.label}</td>
+        <td>${r.formula}</td>
+        <td>${fmtFull(r.value)}</td>
+      </tr>
+    `).join('') + `
+      <tr class="total-row">
+        <td>Total Revenue Upside</td>
+        <td></td>
+        <td>${fmtFull(c.total)}</td>
+      </tr>
+    `;
+
+    // Chart
+    renderChart(rows, c.total);
+  }
+
+  function renderChart(rows, total) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    if (chart) chart.destroy();
+
+    const colors = ['#7C3AED', '#4F46E5', '#1E1B4B', '#A78BFA'];
+    const labels = rows.map(r => r.label.replace(' Revenue', ''));
+    const values = rows.map(r => r.value);
+
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          borderSkipped: false,
+          barThickness: 36,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ' ' + fmtFull(ctx.raw) +
+                ' (' + ((ctx.raw / total) * 100).toFixed(0) + '%)',
+            },
+            backgroundColor: '#1E1B4B',
+            padding: 10,
+            cornerRadius: 8,
+            titleFont: { size: 12, weight: '600' },
+            bodyFont: { size: 13, weight: '700' },
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#F3F4F6', drawBorder: false },
+            ticks: {
+              callback: v => fmt(v),
+              font: { size: 11, family: 'Inter' },
+              color: '#9CA3AF',
+            },
+            border: { display: false },
+          },
+          y: {
+            grid: { display: false },
+            ticks: {
+              font: { size: 11, family: 'Inter', weight: '500' },
+              color: '#374151',
+            },
+            border: { display: false },
+          }
+        }
+      }
+    });
+  }
+
+  // ─── Init ─────────────────────────────────────────────────
+  setupInputs();
+</script>
+</body>
+</html>

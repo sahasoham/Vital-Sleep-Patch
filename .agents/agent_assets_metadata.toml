@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "0vU2cu-3YJvGs6R8P7YVA"
+uri = "file://artifacts/website/public/images/sleeping-child.png"
+type = "image"
+title = "Child sleeping peacefully"
+
+[[generated]]
+id = "BYnZ3jXbl6HVaLGl5XH7Z"
+uri = "file://artifacts/website/public/images/vital-patch.png"
+type = "image"
+title = "Soft medical patch"
