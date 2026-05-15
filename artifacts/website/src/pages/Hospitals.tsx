@@ -399,7 +399,7 @@ export default function Hospitals() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
                     <XAxis type="number" tickFormatter={(val) => fmt(val)} axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
-                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--secondary))', fontSize: 13, fontWeight: 500}} width={140} />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--foreground))', fontSize: 13, fontWeight: 500}} width={140} />
                     <Tooltip content={<CustomTooltip />} cursor={{fill: 'hsl(var(--muted))', opacity: 0.4}} />
                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={36}>
                       {chartData.map((entry, index) => (
