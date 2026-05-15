@@ -70,9 +70,7 @@ export default function Home() {
         <section className="py-24 bg-muted/50 border-y border-border">
           <div className="container mx-auto px-4 max-w-4xl text-center">
             <h2 className="text-3xl font-bold mb-6">The current process is broken.</h2>
-            <p className="text-lg text-muted-foreground mb-12">
-              Suspect your child has sleep apnea? Right now, that means waiting 6-9 months for a hospital bed, then watching them try to sleep covered in 20+ uncomfortable wires and sensors. It's stressful, inaccurate, and outdated.
-            </p>
+            <p className="text-lg text-muted-foreground mb-12">Suspect your child has sleep apnea? Right now, that means waiting 6-9 months for a hospital bed, then watching them try to sleep covered in 20+ uncomfortable wires and sensors. It's stressful and no longer necessary.</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-border">
                 <div className="text-destructive font-bold text-xl mb-2">6+ Months</div>
