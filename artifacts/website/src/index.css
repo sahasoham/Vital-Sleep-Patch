@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -50,79 +51,84 @@
 }
 
 :root {
-  --background: 240 20% 99%;
-  --foreground: 245 47% 20%;
+  /* Warm off-white */
+  --background: 40 33% 98%;
+  /* Deep Navy */
+  --foreground: 222 47% 11%;
 
-  --border: 240 10% 90%;
-  --input: 240 10% 90%;
-  --ring: 262 83% 58%;
+  --border: 220 20% 90%;
+  --input: 220 20% 90%;
+  --ring: 222 47% 11%;
 
   --card: 0 0% 100%;
-  --card-foreground: 245 47% 20%;
-  --card-border: 240 10% 94%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 220 20% 90%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 245 47% 20%;
-  --popover-border: 240 10% 94%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 220 20% 90%;
 
-  --primary: 262 83% 58%;
-  --primary-foreground: 0 0% 100%;
-  --primary-border: 262 83% 48%;
+  /* Navy as primary */
+  --primary: 222 47% 11%;
+  --primary-foreground: 40 33% 98%;
+  --primary-border: 222 47% 5%;
 
-  --secondary: 245 47% 20%;
-  --secondary-foreground: 0 0% 100%;
-  --secondary-border: 245 47% 10%;
+  /* Soft beige/taupe for secondary */
+  --secondary: 35 25% 92%;
+  --secondary-foreground: 222 47% 11%;
+  --secondary-border: 35 25% 85%;
 
-  --muted: 240 20% 96%;
-  --muted-foreground: 240 10% 40%;
-  --muted-border: 240 20% 92%;
+  --muted: 220 20% 94%;
+  --muted-foreground: 220 15% 45%;
+  --muted-border: 220 20% 88%;
 
-  --accent: 28 100% 94%;
-  --accent-foreground: 28 80% 30%;
-  --accent-border: 28 100% 90%;
+  /* Accent */
+  --accent: 15 45% 60%;
+  --accent-foreground: 0 0% 100%;
+  --accent-border: 15 45% 50%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --destructive-border: 0 84% 50%;
 
-  --app-font-sans: 'Inter', system-ui, sans-serif;
-  --app-font-serif: Georgia, serif;
+  --app-font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --app-font-serif: 'Fraunces', Georgia, serif;
   --app-font-mono: Menlo, monospace;
   
-  --radius: 1rem;
+  --radius: 0.75rem;
 }
 
 .dark {
-  --background: 245 47% 10%;
-  --foreground: 240 20% 99%;
+  --background: 222 47% 11%;
+  --foreground: 40 33% 98%;
 
-  --border: 245 30% 20%;
-  --input: 245 30% 20%;
-  --ring: 262 83% 58%;
+  --border: 222 30% 20%;
+  --input: 222 30% 20%;
+  --ring: 40 33% 98%;
 
-  --card: 245 40% 15%;
-  --card-foreground: 240 20% 99%;
-  --card-border: 245 30% 25%;
+  --card: 222 40% 15%;
+  --card-foreground: 40 33% 98%;
+  --card-border: 222 30% 20%;
 
-  --popover: 245 40% 15%;
-  --popover-foreground: 240 20% 99%;
-  --popover-border: 245 30% 25%;
+  --popover: 222 40% 15%;
+  --popover-foreground: 40 33% 98%;
+  --popover-border: 222 30% 20%;
 
-  --primary: 262 83% 68%;
-  --primary-foreground: 0 0% 100%;
-  --primary-border: 262 83% 58%;
+  --primary: 40 33% 98%;
+  --primary-foreground: 222 47% 11%;
+  --primary-border: 40 33% 90%;
 
-  --secondary: 240 20% 99%;
-  --secondary-foreground: 245 47% 10%;
-  --secondary-border: 240 10% 90%;
+  --secondary: 222 30% 20%;
+  --secondary-foreground: 40 33% 98%;
+  --secondary-border: 222 30% 15%;
 
-  --muted: 245 30% 20%;
-  --muted-foreground: 240 10% 70%;
-  --muted-border: 245 30% 25%;
+  --muted: 222 30% 18%;
+  --muted-foreground: 220 15% 70%;
+  --muted-border: 222 30% 25%;
 
-  --accent: 262 40% 25%;
-  --accent-foreground: 262 80% 90%;
-  --accent-border: 262 40% 30%;
+  --accent: 15 45% 60%;
+  --accent-foreground: 0 0% 100%;
+  --accent-border: 15 45% 50%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
@@ -136,5 +142,9 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif tracking-tight;
   }
 }
