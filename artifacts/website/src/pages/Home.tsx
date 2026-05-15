@@ -26,7 +26,7 @@ export default function Home() {
                   Coming Soon
                 </div>
                 <h1 className="text-4xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 leading-tight">
-                  Finally, a pediatric sleep study <span className="text-primary">at home, not at the hospital.</span>
+                  Finally, a sleep study for your child, <span className="text-primary">at home, not at the hospital.</span>
                 </h1>
                 <p className="text-lg lg:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
                   The Vital Patch is a simple, wire-free adhesive that tests for sleep apnea while your child sleeps comfortably in their own bed.
