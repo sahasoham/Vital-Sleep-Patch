@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, ArrowLeft } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useRequestDemo } from "@workspace/api-client-react";
 
 const DEFAULTS = {
   psg_volume: 1000,
@@ -37,6 +38,9 @@ function num(n: number) {
 export default function Hospitals() {
   const [currentScreen, setCurrentScreen] = useState(1);
   const [inputs, setInputs] = useState(DEFAULTS);
+  const [demoForm, setDemoForm] = useState({ name: "", email: "", institution: "", jobTitle: "" });
+  const [demoSubmitted, setDemoSubmitted] = useState(false);
+  const demoMutation = useRequestDemo();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -399,7 +403,7 @@ export default function Hospitals() {
                     <Tooltip content={<CustomTooltip />} cursor={{fill: 'hsl(var(--muted))', opacity: 0.4}} />
                     <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={36}>
                       {chartData.map((entry, index) => (
-                        <cell key={`cell-${index}`} fill={entry.fill} />
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -474,6 +478,109 @@ export default function Hospitals() {
               This calculator is intended for illustrative purposes only.
             </p>
 
+            {/* Demo Request CTA */}
+            <div className="bg-background rounded-2xl p-6 md:p-8 shadow-sm border border-border mb-8">
+              {demoSubmitted ? (
+                <div className="text-center py-6">
+                  <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-foreground mb-2">We'll be in touch.</h3>
+                  <p className="text-muted-foreground max-w-sm mx-auto">
+                    Thanks for your interest. A member of our team will reach out within one business day.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-foreground mb-1">See it in action</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Ready to explore a partnership? Leave your details and we'll set up a live demo tailored to your institution.
+                    </p>
+                  </div>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      demoMutation.mutate(
+                        {
+                          data: {
+                            name: demoForm.name,
+                            email: demoForm.email,
+                            institution: demoForm.institution,
+                            jobTitle: demoForm.jobTitle || null,
+                            calculatedUpside: c.total,
+                            inputs: inputs as Record<string, unknown>,
+                          },
+                        },
+                        {
+                          onSuccess: () => setDemoSubmitted(true),
+                        }
+                      );
+                    }}
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                  >
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-1">Your name <span className="text-destructive">*</span></label>
+                      <input
+                        type="text"
+                        required
+                        value={demoForm.name}
+                        onChange={(e) => setDemoForm(f => ({ ...f, name: e.target.value }))}
+                        placeholder="Dr. Jane Smith"
+                        className="w-full h-11 px-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-1">Work email <span className="text-destructive">*</span></label>
+                      <input
+                        type="email"
+                        required
+                        value={demoForm.email}
+                        onChange={(e) => setDemoForm(f => ({ ...f, email: e.target.value }))}
+                        placeholder="jane@childrenshospital.org"
+                        className="w-full h-11 px-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-1">Institution <span className="text-destructive">*</span></label>
+                      <input
+                        type="text"
+                        required
+                        value={demoForm.institution}
+                        onChange={(e) => setDemoForm(f => ({ ...f, institution: e.target.value }))}
+                        placeholder="Children's Hospital Boston"
+                        className="w-full h-11 px-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-foreground mb-1">Job title <span className="text-muted-foreground font-normal">(optional)</span></label>
+                      <input
+                        type="text"
+                        value={demoForm.jobTitle}
+                        onChange={(e) => setDemoForm(f => ({ ...f, jobTitle: e.target.value }))}
+                        placeholder="Director of Sleep Medicine"
+                        className="w-full h-11 px-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                      />
+                    </div>
+                    <div className="sm:col-span-2 flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-2">
+                      <button
+                        type="submit"
+                        disabled={demoMutation.isPending}
+                        className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60"
+                      >
+                        {demoMutation.isPending ? "Sending…" : "Request a Demo"}
+                        {!demoMutation.isPending && <ArrowRight className="w-4 h-4" />}
+                      </button>
+                      <p className="text-xs text-muted-foreground">
+                        Your calculated upside of <strong>{fmtFull(c.total)}</strong> will be included.
+                      </p>
+                    </div>
+                    {demoMutation.isError && (
+                      <p className="sm:col-span-2 text-sm text-destructive">Something went wrong. Please try again.</p>
+                    )}
+                  </form>
+                </>
+              )}
+            </div>
+
             <div className="flex justify-center gap-4">
               <button 
                 onClick={startOver}
@@ -483,7 +590,7 @@ export default function Hospitals() {
               </button>
               <button 
                 onClick={() => window.print()}
-                className="bg-secondary text-foreground-foreground px-6 py-2 rounded-xl font-semibold hover:bg-secondary/90 transition-all shadow-md"
+                className="bg-secondary text-foreground px-6 py-2 rounded-xl font-semibold hover:bg-secondary/90 transition-all shadow-md"
               >
                 Print / Save PDF
               </button>

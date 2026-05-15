@@ -17,6 +17,8 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  DemoRequest,
+  DemoResult,
   ErrorResponse,
   HealthStatus,
   WaitlistCount,
@@ -194,6 +196,93 @@ export const useJoinWaitlist = <
   TContext
 > => {
   return useMutation(getJoinWaitlistMutationOptions(options));
+};
+
+/**
+ * Submit contact info and calculator results to request a demo
+ * @summary Request a demo
+ */
+export const getRequestDemoUrl = () => {
+  return `/api/demo`;
+};
+
+export const requestDemo = async (
+  demoRequest: DemoRequest,
+  options?: RequestInit,
+): Promise<DemoResult> => {
+  return customFetch<DemoResult>(getRequestDemoUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(demoRequest),
+  });
+};
+
+export const getRequestDemoMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestDemo>>,
+    TError,
+    { data: BodyType<DemoRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestDemo>>,
+  TError,
+  { data: BodyType<DemoRequest> },
+  TContext
+> => {
+  const mutationKey = ["requestDemo"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestDemo>>,
+    { data: BodyType<DemoRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return requestDemo(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestDemoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestDemo>>
+>;
+export type RequestDemoMutationBody = BodyType<DemoRequest>;
+export type RequestDemoMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Request a demo
+ */
+export const useRequestDemo = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestDemo>>,
+    TError,
+    { data: BodyType<DemoRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestDemo>>,
+  TError,
+  { data: BodyType<DemoRequest> },
+  TContext
+> => {
+  return useMutation(getRequestDemoMutationOptions(options));
 };
 
 /**

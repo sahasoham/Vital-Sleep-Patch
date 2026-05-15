@@ -26,6 +26,19 @@ export const JoinWaitlistBody = zod.object({
 });
 
 /**
+ * Submit contact info and calculator results to request a demo
+ * @summary Request a demo
+ */
+export const RequestDemoBody = zod.object({
+  name: zod.string(),
+  email: zod.string().email(),
+  institution: zod.string(),
+  jobTitle: zod.string().nullish(),
+  calculatedUpside: zod.number(),
+  inputs: zod.record(zod.string(), zod.unknown()),
+});
+
+/**
  * Returns total number of people on the waitlist
  * @summary Get waitlist count
  */

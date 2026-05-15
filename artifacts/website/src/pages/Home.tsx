@@ -11,7 +11,7 @@ export default function Home() {
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } }
   };
 
   const staggerContainer = {
@@ -57,7 +57,7 @@ export default function Home() {
                   </a>
                   {(countData?.count ?? 0) > 0 && (
                     <p className="text-sm font-medium text-muted-foreground bg-white/50 px-4 py-2 rounded-full border border-border/50">
-                      Join <span className="text-foreground font-semibold">{countData.count}</span> parents waiting
+                      Join <span className="text-foreground font-semibold">{countData?.count}</span> parents waiting
                     </p>
                   )}
                 </motion.div>
@@ -67,7 +67,7 @@ export default function Home() {
                 className="flex-1 w-full max-w-xl relative"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
               >
                 <div className="aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl relative bg-muted ring-1 ring-border/50">
                   <img 

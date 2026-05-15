@@ -27,6 +27,23 @@ export interface WaitlistCount {
   count: number;
 }
 
+export type DemoRequestInputs = { [key: string]: unknown };
+
+export interface DemoRequest {
+  name: string;
+  email: string;
+  institution: string;
+  /** @nullable */
+  jobTitle?: string | null;
+  calculatedUpside: number;
+  inputs: DemoRequestInputs;
+}
+
+export interface DemoResult {
+  success: boolean;
+  message: string;
+}
+
 export interface ErrorResponse {
   error: string;
 }

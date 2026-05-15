@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: waitlist
     description: Waitlist operations
+  - name: demo
+    description: Demo request operations
 paths:
   /healthz:
     get:
@@ -52,6 +54,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /demo:
+    post:
+      operationId: requestDemo
+      tags: [demo]
+      summary: Request a demo
+      description: Submit contact info and calculator results to request a demo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoRequest"
+      responses:
+        "201":
+          description: Demo request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoResult"
         "400":
           description: Invalid input
           content:
@@ -112,6 +140,34 @@ components:
       properties:
         count:
           type: integer
+
+    DemoRequest:
+      type: object
+      required: [name, email, institution, calculatedUpside, inputs]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        institution:
+          type: string
+        jobTitle:
+          type: ["string", "null"]
+        calculatedUpside:
+          type: number
+        inputs:
+          type: object
+          additionalProperties: true
+
+    DemoResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
 
     ErrorResponse:
       type: object

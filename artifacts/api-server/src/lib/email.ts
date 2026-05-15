@@ -57,6 +57,68 @@ export async function sendAdminNotification(email: string, name?: string | null,
   }
 }
 
+export async function sendDemoRequestNotification(
+  name: string,
+  email: string,
+  institution: string,
+  jobTitle: string | null | undefined,
+  calculatedUpside: number,
+  inputs: Record<string, unknown>,
+) {
+  const adminEmail = process.env["ADMIN_EMAIL"];
+  if (!adminEmail) {
+    logger.warn("ADMIN_EMAIL not set — skipping demo request notification");
+    return;
+  }
+
+  const transporter = createTransporter();
+  if (!transporter) {
+    logger.warn("SMTP not configured — skipping demo request email");
+    return;
+  }
+
+  const fromEmail = process.env["SMTP_USER"];
+  const usdFmt = (n: number) => "$" + Math.round(n).toLocaleString();
+
+  try {
+    await transporter.sendMail({
+      from: `"Vital Sleep Patch" <${fromEmail}>`,
+      to: adminEmail,
+      subject: `Demo request from ${name} — ${institution} (${usdFmt(calculatedUpside)} upside)`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">
+          <h2 style="color: #1E1B4B; margin-top: 0;">New Demo Request</h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+            <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px; width: 40%;">Name</td><td style="padding: 8px 0; font-weight: 600;">${name}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Email</td><td style="padding: 8px 0; font-weight: 600;"><a href="mailto:${email}">${email}</a></td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Institution</td><td style="padding: 8px 0; font-weight: 600;">${institution}</td></tr>
+            ${jobTitle ? `<tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Job Title</td><td style="padding: 8px 0; font-weight: 600;">${jobTitle}</td></tr>` : ""}
+          </table>
+          <div style="background: #f0f4ff; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; margin-bottom: 4px;">Their Calculated Revenue Upside</div>
+            <div style="font-size: 32px; font-weight: 800; color: #1E1B4B;">${usdFmt(calculatedUpside)}</div>
+          </div>
+          <h3 style="color: #374151; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">Calculator Inputs</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <tr><td style="padding: 6px 0; color: #6b7280;">Annual PSG volume</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${inputs["psg_volume"]}</td></tr>
+            <tr><td style="padding: 6px 0; color: #6b7280;">Waitlist length</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${inputs["waitlist"]}</td></tr>
+            <tr><td style="padding: 6px 0; color: #6b7280;">Home-test eligibility</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${inputs["eligibility"]}%</td></tr>
+            <tr><td style="padding: 6px 0; color: #6b7280;">Interpretation fee</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${usdFmt(Number(inputs["interp_fee"]))}</td></tr>
+            <tr><td style="padding: 6px 0; color: #6b7280;">Follow-up consult</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${usdFmt(Number(inputs["consult_fee"]))}</td></tr>
+            <tr><td style="padding: 6px 0; color: #6b7280;">Downstream treatment</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${usdFmt(Number(inputs["treatment_rev"]))}</td></tr>
+            <tr><td style="padding: 6px 0; color: #6b7280;">Referral rate</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${inputs["referral_rate"]}%</td></tr>
+            <tr><td style="padding: 6px 0; color: #6b7280;">Monitoring revenue/yr</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${usdFmt(Number(inputs["monitoring_rev"]))}</td></tr>
+            <tr><td style="padding: 6px 0; color: #6b7280;">Years modeled</td><td style="padding: 6px 0; font-weight: 600; text-align: right;">${inputs["years"]}</td></tr>
+          </table>
+        </div>
+      `,
+    });
+    logger.info({ email, institution }, "Demo request notification sent");
+  } catch (err) {
+    logger.error({ err }, "Failed to send demo request notification email");
+  }
+}
+
 export async function sendWaitlistConfirmation(email: string, name?: string | null, position?: number) {
   const transporter = createTransporter();
   if (!transporter) {
