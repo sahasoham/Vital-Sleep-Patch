@@ -141,7 +141,7 @@ export default function Home() {
               <div className="text-center relative">
                 <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary mx-auto mb-6">2</div>
                 <h3 className="text-xl font-bold mb-3">Apply at Bedtime</h3>
-                <p className="text-secondary-foreground/70">Simply place the soft patch on your child's abdomen before sleep. No wires to tangle.</p>
+                <p className="text-secondary-foreground/70">Simply place the soft patch on your child's chest before sleep. No wires to tangle.</p>
               </div>
               <div className="text-center relative">
                 <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary mx-auto mb-6">3</div>
