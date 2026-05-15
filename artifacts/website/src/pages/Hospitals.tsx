@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ArrowRight, ArrowLeft } from "lucide-react";
@@ -37,6 +37,10 @@ function num(n: number) {
 export default function Hospitals() {
   const [currentScreen, setCurrentScreen] = useState(1);
   const [inputs, setInputs] = useState(DEFAULTS);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const handleInputChange = (id: keyof typeof DEFAULTS, value: string) => {
     const parsed = parseFloat(value);
@@ -82,7 +86,7 @@ export default function Hospitals() {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-secondary text-secondary-foreground p-3 rounded-lg shadow-lg border border-border">
+        <div className="bg-secondary text-foreground-foreground p-3 rounded-lg shadow-lg border border-border">
           <p className="font-semibold text-sm mb-1">{payload[0].payload.name}</p>
           <p className="font-bold text-lg">{fmtFull(payload[0].value)} <span className="text-xs font-normal opacity-70">({((payload[0].value / c.total) * 100).toFixed(0)}%)</span></p>
         </div>
@@ -96,12 +100,12 @@ export default function Hospitals() {
       <Navigation />
       
       {/* Header */}
-      <div className="bg-secondary text-secondary-foreground py-8">
+      <div className="bg-secondary text-foreground-foreground py-8">
         <div className="container mx-auto px-4 max-w-4xl flex items-center gap-4">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl">V</div>
           <div>
             <h1 className="font-semibold text-lg leading-tight">Vital Sleep Patch</h1>
-            <p className="text-secondary-foreground/60 text-sm">AMC Revenue Upside Calculator</p>
+            <p className="text-foreground-foreground/60 text-sm">AMC Revenue Upside Calculator</p>
           </div>
         </div>
       </div>
@@ -120,14 +124,14 @@ export default function Hospitals() {
               )}
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${
                 currentScreen === step.num ? 'bg-primary text-primary-foreground' : 
-                currentScreen > step.num ? 'bg-secondary text-secondary-foreground' : 'bg-muted text-muted-foreground'
+                currentScreen > step.num ? 'bg-secondary text-foreground-foreground' : 'bg-muted text-muted-foreground'
               }`}>
                 {step.num}
               </div>
               <div className="hidden sm:block">
                 <div className={`text-sm leading-tight transition-colors ${
                   currentScreen === step.num ? 'text-primary font-bold' : 
-                  currentScreen > step.num ? 'text-secondary font-semibold' : 'text-muted-foreground'
+                  currentScreen > step.num ? 'text-foreground font-semibold' : 'text-muted-foreground'
                 }`}>{step.title}</div>
                 <div className="text-xs text-muted-foreground">{step.sub}</div>
               </div>
@@ -141,7 +145,7 @@ export default function Hospitals() {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="mb-8">
               <div className="text-xs font-bold tracking-widest uppercase text-primary mb-2">Step 1 of 3</div>
-              <h2 className="text-3xl font-bold text-secondary mb-3 tracking-tight">Tell us about your lab today</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Tell us about your lab today</h2>
               <p className="text-muted-foreground leading-relaxed">
                 The Vital Sleep Patch creates a <strong>parallel pathway</strong> for children on your waitlist — 
                 your existing in-lab PSG program continues at full capacity. Let's start with where you are now.
@@ -152,7 +156,7 @@ export default function Hospitals() {
               <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-6">Current Lab Capacity</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="psg_volume" className="block text-sm font-semibold text-secondary mb-1">Annual pediatric PSG volume</label>
+                  <label htmlFor="psg_volume" className="block text-sm font-semibold text-foreground mb-1">Annual pediatric PSG volume</label>
                   <p className="text-xs text-muted-foreground mb-2">In-lab studies per year</p>
                   <input
                     id="psg_volume"
@@ -164,7 +168,7 @@ export default function Hospitals() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="waitlist" className="block text-sm font-semibold text-secondary mb-1">Current waitlist length</label>
+                  <label htmlFor="waitlist" className="block text-sm font-semibold text-foreground mb-1">Current waitlist length</label>
                   <p className="text-xs text-muted-foreground mb-2">Patients waiting for a PSG</p>
                   <input
                     id="waitlist"
@@ -181,7 +185,7 @@ export default function Hospitals() {
             <div className="bg-background rounded-2xl p-6 md:p-8 shadow-sm border border-border mb-8">
               <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-6">At-Home Eligibility</h3>
               <div>
-                <label htmlFor="eligibility" className="block text-sm font-semibold text-secondary mb-1">Home-test eligibility rate</label>
+                <label htmlFor="eligibility" className="block text-sm font-semibold text-foreground mb-1">Home-test eligibility rate</label>
                 <p className="text-xs text-muted-foreground mb-2 max-w-xl">
                   % of waitlisted children who are good candidates for at-home diagnosis (typically children with straightforward suspected OSA, without severe comorbidities)
                 </p>
@@ -214,7 +218,7 @@ export default function Hospitals() {
           <div className="animate-in fade-in slide-in-from-right-8 duration-500">
             <div className="mb-8">
               <div className="text-xs font-bold tracking-widest uppercase text-primary mb-2">Step 2 of 3</div>
-              <h2 className="text-3xl font-bold text-secondary mb-3 tracking-tight">Revenue waiting to be unlocked</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Revenue waiting to be unlocked</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Each Vital-diagnosed patient generates multiple revenue events. Enter your institution's rates below — we've pre-filled national benchmarks to get you started.
               </p>
@@ -224,7 +228,7 @@ export default function Hospitals() {
               <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-6">Per-Test Revenue</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="interp_fee" className="block text-sm font-semibold text-secondary mb-1">Interpretation fee</label>
+                  <label htmlFor="interp_fee" className="block text-sm font-semibold text-foreground mb-1">Interpretation fee</label>
                   <p className="text-xs text-muted-foreground mb-2">Physician read of the test</p>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
@@ -239,7 +243,7 @@ export default function Hospitals() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="consult_fee" className="block text-sm font-semibold text-secondary mb-1">Follow-up consult revenue</label>
+                  <label htmlFor="consult_fee" className="block text-sm font-semibold text-foreground mb-1">Follow-up consult revenue</label>
                   <p className="text-xs text-muted-foreground mb-2">Per diagnosed patient</p>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
@@ -260,7 +264,7 @@ export default function Hospitals() {
               <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-6">Downstream Treatment</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="referral_rate" className="block text-sm font-semibold text-secondary mb-1">Referral rate</label>
+                  <label htmlFor="referral_rate" className="block text-sm font-semibold text-foreground mb-1">Referral rate</label>
                   <p className="text-xs text-muted-foreground mb-2">% referred for T&A, PAP, etc.</p>
                   <div className="relative">
                     <input
@@ -275,7 +279,7 @@ export default function Hospitals() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="treatment_rev" className="block text-sm font-semibold text-secondary mb-1">Avg. downstream revenue</label>
+                  <label htmlFor="treatment_rev" className="block text-sm font-semibold text-foreground mb-1">Avg. downstream revenue</label>
                   <p className="text-xs text-muted-foreground mb-2">Per referred patient</p>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
@@ -296,7 +300,7 @@ export default function Hospitals() {
               <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-6">Ongoing Monitoring</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="monitoring_rev" className="block text-sm font-semibold text-secondary mb-1">Annual monitoring revenue</label>
+                  <label htmlFor="monitoring_rev" className="block text-sm font-semibold text-foreground mb-1">Annual monitoring revenue</label>
                   <p className="text-xs text-muted-foreground mb-2">Follow-ups per patient/year</p>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
@@ -311,7 +315,7 @@ export default function Hospitals() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="years" className="block text-sm font-semibold text-secondary mb-1">Years of follow-up</label>
+                  <label htmlFor="years" className="block text-sm font-semibold text-foreground mb-1">Years of follow-up</label>
                   <p className="text-xs text-muted-foreground mb-2">How far out to model?</p>
                   <input
                     id="years"
@@ -346,7 +350,7 @@ export default function Hospitals() {
           <div className="animate-in fade-in slide-in-from-right-8 duration-500">
             <div className="mb-8">
               <div className="text-xs font-bold tracking-widest uppercase text-primary mb-2">Step 3 of 3</div>
-              <h2 className="text-3xl font-bold text-secondary mb-3 tracking-tight">Your estimated revenue upside</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Your estimated revenue upside</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Based on your inputs, here is the incremental revenue your institution could capture by deploying the Vital Sleep Patch as a parallel diagnostic pathway.
               </p>
@@ -372,15 +376,15 @@ export default function Hospitals() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
                 <div className="text-xs font-bold tracking-widest uppercase text-primary mb-1">Annual recurring</div>
-                <div className="text-2xl font-extrabold text-secondary">{fmt(annual)}</div>
+                <div className="text-2xl font-extrabold text-foreground">{fmt(annual)}</div>
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
                 <div className="text-xs font-bold tracking-widest uppercase text-primary mb-1">Per-test revenue</div>
-                <div className="text-2xl font-extrabold text-secondary">{fmt(inputs.interp_fee + inputs.consult_fee)}</div>
+                <div className="text-2xl font-extrabold text-foreground">{fmt(inputs.interp_fee + inputs.consult_fee)}</div>
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
                 <div className="text-xs font-bold tracking-widest uppercase text-primary mb-1">Tests per year</div>
-                <div className="text-2xl font-extrabold text-secondary">{num(c.vitalTests)}</div>
+                <div className="text-2xl font-extrabold text-foreground">{num(c.vitalTests)}</div>
               </div>
             </div>
 
@@ -416,7 +420,7 @@ export default function Hospitals() {
                 </thead>
                 <tbody>
                   <tr className="border-b border-border/50">
-                    <td className="py-4 pr-4 font-semibold text-secondary">
+                    <td className="py-4 pr-4 font-semibold text-foreground">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary shrink-0"></div>
                         Interpretation
@@ -426,7 +430,7 @@ export default function Hospitals() {
                     <td className="py-4 pl-4 text-right font-bold text-foreground">{fmtFull(c.interpRevenue)}</td>
                   </tr>
                   <tr className="border-b border-border/50">
-                    <td className="py-4 pr-4 font-semibold text-secondary">
+                    <td className="py-4 pr-4 font-semibold text-foreground">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary shrink-0"></div>
                         Follow-Up Consult
@@ -436,7 +440,7 @@ export default function Hospitals() {
                     <td className="py-4 pl-4 text-right font-bold text-foreground">{fmtFull(c.consultRevenue)}</td>
                   </tr>
                   <tr className="border-b border-border/50">
-                    <td className="py-4 pr-4 font-semibold text-secondary">
+                    <td className="py-4 pr-4 font-semibold text-foreground">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-secondary shrink-0"></div>
                         Downstream Treatment
@@ -446,7 +450,7 @@ export default function Hospitals() {
                     <td className="py-4 pl-4 text-right font-bold text-foreground">{fmtFull(c.treatRevenue)}</td>
                   </tr>
                   <tr>
-                    <td className="py-4 pr-4 font-semibold text-secondary">
+                    <td className="py-4 pr-4 font-semibold text-foreground">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary/60 shrink-0"></div>
                         Monitoring
@@ -479,7 +483,7 @@ export default function Hospitals() {
               </button>
               <button 
                 onClick={() => window.print()}
-                className="bg-secondary text-secondary-foreground px-6 py-2 rounded-xl font-semibold hover:bg-secondary/90 transition-all shadow-md"
+                className="bg-secondary text-foreground-foreground px-6 py-2 rounded-xl font-semibold hover:bg-secondary/90 transition-all shadow-md"
               >
                 Print / Save PDF
               </button>
