@@ -23,7 +23,6 @@ export function Footer() {
             <ul className="space-y-4 text-background/60 text-sm font-light">
               <li><Link href="/" className="hover:text-background transition-colors">How it Works</Link></li>
               <li><Link href="/" className="hover:text-background transition-colors">The Patch</Link></li>
-              <li><Link href="/" className="hover:text-background transition-colors">Clinical Evidence</Link></li>
             </ul>
           </div>
           

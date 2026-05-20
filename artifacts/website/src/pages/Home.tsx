@@ -80,7 +80,7 @@ export default function Home() {
                     <Activity className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
-                    <p className="text-base font-semibold text-foreground">Clinical Grade</p>
+                    <p className="text-base font-semibold text-foreground">Designed for Clinical Accuracy</p>
                     <p className="text-sm text-muted-foreground">Zero hospital cables</p>
                   </div>
                 </motion.div>
@@ -153,7 +153,7 @@ export default function Home() {
                 variants={staggerContainer}
               >
                 <motion.h2 variants={fadeIn} className="text-4xl lg:text-5xl font-serif mb-8 text-foreground leading-tight">
-                  A single patch. <br/>Clinical-grade results.
+                  A single patch. <br/>Designed for clinical accuracy.
                 </motion.h2>
                 <motion.p variants={fadeIn} className="text-xl text-muted-foreground mb-10 font-light leading-relaxed">
                   The Vital Patch uses advanced micro-sensors to monitor breathing, oxygen levels, and heart rate all from a single, soft adhesive patch placed on your child's body.
@@ -161,7 +161,7 @@ export default function Home() {
                 
                 <motion.ul variants={staggerContainer} className="space-y-6">
                   {[
-                    "FDA-cleared accuracy for pediatric diagnosis",
+                    "Designed for FDA clearance",
                     "Soft, breathable, skin-friendly medical adhesive",
                     "Child sleeps in their own bed, in their own home",
                     "Results sent securely to your pediatrician in 24 hours"
@@ -197,7 +197,7 @@ export default function Home() {
               <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-px bg-background/20"></div>
               
               {[
-                { step: "1", title: "Order the Kit", desc: "Prescribed by your doctor or ordered directly, the kit arrives at your door in days." },
+                { step: "1", title: "Order the Kit", desc: "Prescribed by your doctor, the kit arrives at your door in days." },
                 { step: "2", title: "Apply at Bedtime", desc: "Simply place the soft patch on your child's body before sleep. No wires to tangle." },
                 { step: "3", title: "Get Answers", desc: "Remove in the morning. A detailed clinical report is securely generated for your doctor." }
               ].map((item, i) => (
@@ -252,7 +252,7 @@ export default function Home() {
                 </p>
                 <div className="flex flex-wrap items-center gap-8 text-sm font-medium text-foreground/80">
                   <div className="flex items-center gap-2"><Shield className="w-5 h-5 text-foreground/60" /> Secure Data</div>
-                  <div className="flex items-center gap-2"><Activity className="w-5 h-5 text-foreground/60" /> Clinical Grade</div>
+                  <div className="flex items-center gap-2"><Activity className="w-5 h-5 text-foreground/60" /> Designed for Clinical Accuracy</div>
                   <div className="flex items-center gap-2"><Clock className="w-5 h-5 text-foreground/60" /> 24hr Results</div>
                 </div>
               </motion.div>
@@ -270,6 +270,11 @@ export default function Home() {
         </section>
 
       </main>
+      <div className="bg-background border-t border-border/50 py-6">
+        <p className="text-center text-xs text-muted-foreground max-w-3xl mx-auto px-6">
+          The Vital Sleep Patch is an investigational device. We are pursuing FDA clearance for commercial distribution.
+        </p>
+      </div>
       <Footer />
     </div>
   );

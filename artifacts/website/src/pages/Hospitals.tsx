@@ -272,7 +272,7 @@ export default function Hospitals() {
               <div>
                 <label htmlFor="eligibility" className="block text-sm font-semibold text-foreground mb-1">Home-test eligibility rate</label>
                 <p className="text-xs text-muted-foreground mb-2 max-w-xl">
-                  % of waitlisted children who are good candidates for at-home diagnosis (typically children with straightforward suspected OSA, without severe comorbidities)
+                  % of waitlisted children who are good candidates for at-home screening (typically children with straightforward suspected OSA, without severe comorbidities)
                 </p>
                 <div className="relative max-w-[200px]">
                   <input
@@ -305,7 +305,7 @@ export default function Hospitals() {
               <div className="text-xs font-bold tracking-widest uppercase text-primary mb-2">Step 2 of 3</div>
               <h2 className="text-3xl font-bold text-foreground mb-3 tracking-tight">Revenue waiting to be unlocked</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Each Vital-diagnosed patient generates multiple revenue events. Enter your institution's rates below — we've pre-filled national benchmarks to get you started.
+                Each patient screened via Vital generates multiple revenue events. Enter your institution's rates below — we've pre-filled national benchmarks to get you started.
               </p>
             </div>
 
@@ -667,6 +667,11 @@ export default function Hospitals() {
           </div>
         )}
       </main>
+      <div className="border-t border-border bg-background py-6">
+        <p className="text-center text-xs text-muted-foreground max-w-3xl mx-auto px-6">
+          This calculator models projected revenue for planning purposes only. The Vital Sleep Patch is an investigational device not currently available for commercial deployment.
+        </p>
+      </div>
       <Footer />
     </div>
   );
