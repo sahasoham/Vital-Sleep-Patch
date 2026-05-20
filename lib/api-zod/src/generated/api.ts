@@ -45,3 +45,54 @@ export const RequestDemoBody = zod.object({
 export const GetWaitlistCountResponse = zod.object({
   count: zod.number(),
 });
+
+/**
+ * Records calculator inputs and results, optionally with an email
+ * @summary Save a calculator session
+ */
+export const SaveCalculatorSessionBody = zod.object({
+  email: zod.string().email().nullish(),
+  calculatedUpside: zod.number(),
+  inputs: zod.record(zod.string(), zod.unknown()),
+  isTest: zod.boolean().optional(),
+});
+
+/**
+ * Returns calculator sessions. Excludes test entries by default.
+ * @summary List calculator sessions
+ */
+export const GetAdminCalculatorSessionsQueryParams = zod.object({
+  includeTest: zod.coerce.boolean().optional(),
+});
+
+export const GetAdminCalculatorSessionsResponseItem = zod.object({
+  id: zod.number(),
+  email: zod.string().nullish(),
+  annualCases: zod.number().nullish(),
+  hospitals: zod.number().nullish(),
+  calculatedUpside: zod.number(),
+  inputs: zod.record(zod.string(), zod.unknown()),
+  isTest: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+export const GetAdminCalculatorSessionsResponse = zod.array(
+  GetAdminCalculatorSessionsResponseItem,
+);
+
+/**
+ * @summary Toggle is_test flag on a calculator session
+ */
+export const ToggleCalculatorSessionTestParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ToggleCalculatorSessionTestResponse = zod.object({
+  id: zod.number(),
+  email: zod.string().nullish(),
+  annualCases: zod.number().nullish(),
+  hospitals: zod.number().nullish(),
+  calculatedUpside: zod.number(),
+  inputs: zod.record(zod.string(), zod.unknown()),
+  isTest: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});

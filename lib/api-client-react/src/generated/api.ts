@@ -17,10 +17,14 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  CalculatorSession,
+  CalculatorSessionInput,
   DemoRequest,
   DemoResult,
   ErrorResponse,
+  GetAdminCalculatorSessionsParams,
   HealthStatus,
+  SaveCalculatorSessionResult,
   WaitlistCount,
   WaitlistEntry,
   WaitlistResult,
@@ -360,3 +364,288 @@ export function useGetWaitlistCount<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * Records calculator inputs and results, optionally with an email
+ * @summary Save a calculator session
+ */
+export const getSaveCalculatorSessionUrl = () => {
+  return `/api/calculator/session`;
+};
+
+export const saveCalculatorSession = async (
+  calculatorSessionInput: CalculatorSessionInput,
+  options?: RequestInit,
+): Promise<SaveCalculatorSessionResult> => {
+  return customFetch<SaveCalculatorSessionResult>(
+    getSaveCalculatorSessionUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(calculatorSessionInput),
+    },
+  );
+};
+
+export const getSaveCalculatorSessionMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveCalculatorSession>>,
+    TError,
+    { data: BodyType<CalculatorSessionInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveCalculatorSession>>,
+  TError,
+  { data: BodyType<CalculatorSessionInput> },
+  TContext
+> => {
+  const mutationKey = ["saveCalculatorSession"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveCalculatorSession>>,
+    { data: BodyType<CalculatorSessionInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveCalculatorSession(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveCalculatorSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveCalculatorSession>>
+>;
+export type SaveCalculatorSessionMutationBody =
+  BodyType<CalculatorSessionInput>;
+export type SaveCalculatorSessionMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Save a calculator session
+ */
+export const useSaveCalculatorSession = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveCalculatorSession>>,
+    TError,
+    { data: BodyType<CalculatorSessionInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveCalculatorSession>>,
+  TError,
+  { data: BodyType<CalculatorSessionInput> },
+  TContext
+> => {
+  return useMutation(getSaveCalculatorSessionMutationOptions(options));
+};
+
+/**
+ * Returns calculator sessions. Excludes test entries by default.
+ * @summary List calculator sessions
+ */
+export const getGetAdminCalculatorSessionsUrl = (
+  params?: GetAdminCalculatorSessionsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/calculator-sessions?${stringifiedParams}`
+    : `/api/admin/calculator-sessions`;
+};
+
+export const getAdminCalculatorSessions = async (
+  params?: GetAdminCalculatorSessionsParams,
+  options?: RequestInit,
+): Promise<CalculatorSession[]> => {
+  return customFetch<CalculatorSession[]>(
+    getGetAdminCalculatorSessionsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetAdminCalculatorSessionsQueryKey = (
+  params?: GetAdminCalculatorSessionsParams,
+) => {
+  return [
+    `/api/admin/calculator-sessions`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetAdminCalculatorSessionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminCalculatorSessions>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: GetAdminCalculatorSessionsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAdminCalculatorSessions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetAdminCalculatorSessionsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAdminCalculatorSessions>>
+  > = ({ signal }) =>
+    getAdminCalculatorSessions(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminCalculatorSessions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAdminCalculatorSessionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAdminCalculatorSessions>>
+>;
+export type GetAdminCalculatorSessionsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary List calculator sessions
+ */
+
+export function useGetAdminCalculatorSessions<
+  TData = Awaited<ReturnType<typeof getAdminCalculatorSessions>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: GetAdminCalculatorSessionsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAdminCalculatorSessions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAdminCalculatorSessionsQueryOptions(
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Toggle is_test flag on a calculator session
+ */
+export const getToggleCalculatorSessionTestUrl = (id: number) => {
+  return `/api/admin/calculator-sessions/${id}/toggle-test`;
+};
+
+export const toggleCalculatorSessionTest = async (
+  id: number,
+  options?: RequestInit,
+): Promise<CalculatorSession> => {
+  return customFetch<CalculatorSession>(getToggleCalculatorSessionTestUrl(id), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getToggleCalculatorSessionTestMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleCalculatorSessionTest>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof toggleCalculatorSessionTest>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["toggleCalculatorSessionTest"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof toggleCalculatorSessionTest>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return toggleCalculatorSessionTest(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ToggleCalculatorSessionTestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof toggleCalculatorSessionTest>>
+>;
+
+export type ToggleCalculatorSessionTestMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Toggle is_test flag on a calculator session
+ */
+export const useToggleCalculatorSessionTest = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof toggleCalculatorSessionTest>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof toggleCalculatorSessionTest>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getToggleCalculatorSessionTestMutationOptions(options));
+};

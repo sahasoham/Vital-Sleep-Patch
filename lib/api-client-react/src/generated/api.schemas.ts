@@ -44,6 +44,41 @@ export interface DemoResult {
   message: string;
 }
 
+export type CalculatorSessionInputInputs = { [key: string]: unknown };
+
+export interface CalculatorSessionInput {
+  /** @nullable */
+  email?: string | null;
+  calculatedUpside: number;
+  inputs: CalculatorSessionInputInputs;
+  isTest?: boolean;
+}
+
+export interface SaveCalculatorSessionResult {
+  success: boolean;
+  id: number;
+}
+
+export type CalculatorSessionInputs = { [key: string]: unknown };
+
+export interface CalculatorSession {
+  id: number;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  annualCases?: number | null;
+  /** @nullable */
+  hospitals?: number | null;
+  calculatedUpside: number;
+  inputs: CalculatorSessionInputs;
+  isTest: boolean;
+  createdAt: string;
+}
+
 export interface ErrorResponse {
   error: string;
 }
+
+export type GetAdminCalculatorSessionsParams = {
+  includeTest?: boolean;
+};

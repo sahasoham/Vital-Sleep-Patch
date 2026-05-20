@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
-import { db, waitlistTable, demoRequestsTable } from "@workspace/db";
-import { desc } from "drizzle-orm";
+import { db, waitlistTable, demoRequestsTable, calculatorSessionsTable } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -52,6 +52,44 @@ router.get("/admin/demo-requests", requireAdmin, async (_req, res) => {
   res.json(rows);
 });
 
+router.get("/admin/calculator-sessions", requireAdmin, async (req, res) => {
+  const includeTest = req.query["includeTest"] === "true";
+
+  const rows = await db
+    .select()
+    .from(calculatorSessionsTable)
+    .orderBy(desc(calculatorSessionsTable.createdAt));
+
+  const filtered = includeTest ? rows : rows.filter((r) => !r.isTest);
+  res.json(filtered);
+});
+
+router.patch("/admin/calculator-sessions/:id/toggle-test", requireAdmin, async (req, res) => {
+  const id = parseInt(String(req.params["id"] ?? ""), 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id." });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(calculatorSessionsTable)
+    .where(eq(calculatorSessionsTable.id, id));
+
+  if (!existing) {
+    res.status(404).json({ error: "Session not found." });
+    return;
+  }
+
+  const [updated] = await db
+    .update(calculatorSessionsTable)
+    .set({ isTest: !existing.isTest })
+    .where(eq(calculatorSessionsTable.id, id))
+    .returning();
+
+  res.json(updated);
+});
+
 router.get("/admin/waitlist/export.csv", requireAdmin, async (_req, res) => {
   const rows = await db.select().from(waitlistTable).orderBy(desc(waitlistTable.createdAt));
 
@@ -83,6 +121,37 @@ router.get("/admin/demo-requests/export.csv", requireAdmin, async (_req, res) =>
 
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", `attachment; filename="demo-requests-${dateStamp()}.csv"`);
+  res.send([header, ...lines].join("\n"));
+});
+
+router.get("/admin/calculator-sessions/export.csv", requireAdmin, async (req, res) => {
+  const includeTest = req.query["includeTest"] === "true";
+
+  const rows = await db
+    .select()
+    .from(calculatorSessionsTable)
+    .orderBy(desc(calculatorSessionsTable.createdAt));
+
+  const filtered = includeTest ? rows : rows.filter((r) => !r.isTest);
+
+  const header = "id,email,waitlist,eligibility_pct,interp_fee,years,calculated_upside,is_test,created_at";
+  const lines = filtered.map((r) => {
+    const inp = (r.inputs ?? {}) as Record<string, number>;
+    return [
+      r.id,
+      csvEscape(r.email),
+      inp["waitlist"] ?? "",
+      inp["eligibility"] ?? "",
+      inp["interp_fee"] ?? "",
+      inp["years"] ?? "",
+      r.calculatedUpside?.toFixed(2),
+      r.isTest ? "true" : "false",
+      r.createdAt?.toISOString(),
+    ].join(",");
+  });
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="calculator-sessions-${dateStamp()}.csv"`);
   res.send([header, ...lines].join("\n"));
 });
 

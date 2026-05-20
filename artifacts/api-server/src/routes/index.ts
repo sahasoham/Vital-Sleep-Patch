@@ -3,6 +3,7 @@ import healthRouter from "./health";
 import waitlistRouter from "./waitlist";
 import demoRouter from "./demo";
 import adminRouter from "./admin";
+import calculatorRouter from "./calculator";
 
 const router: IRouter = Router();
 
@@ -10,5 +11,6 @@ router.use(healthRouter);
 router.use(waitlistRouter);
 router.use(demoRouter);
 router.use(adminRouter);
+router.use(calculatorRouter);
 
 export default router;

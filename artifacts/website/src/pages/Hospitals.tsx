@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { useRequestDemo } from "@workspace/api-client-react";
+import { useRequestDemo, useSaveCalculatorSession } from "@workspace/api-client-react";
 
 const DEFAULTS = {
   psg_volume: 1000,
@@ -36,11 +36,15 @@ function num(n: number) {
 }
 
 export default function Hospitals() {
-  const [currentScreen, setCurrentScreen] = useState(1);
+  const [currentScreen, setCurrentScreen] = useState(0);
+  const [calEmail, setCalEmail] = useState("");
+  const [calEmailInput, setCalEmailInput] = useState("");
   const [inputs, setInputs] = useState(DEFAULTS);
   const [demoForm, setDemoForm] = useState({ name: "", email: "", institution: "", jobTitle: "" });
   const [demoSubmitted, setDemoSubmitted] = useState(false);
   const demoMutation = useRequestDemo();
+  const saveMutation = useSaveCalculatorSession();
+  const savedRef = useRef(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -71,18 +75,44 @@ export default function Hospitals() {
     return { vitalTests, interpRevenue, consultRevenue, treatRevenue, monitorRevenue, total };
   };
 
+  const goToResults = () => {
+    setCurrentScreen(3);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const startOver = () => {
     setInputs(DEFAULTS);
-    setCurrentScreen(1);
+    setCalEmail("");
+    setCalEmailInput("");
+    savedRef.current = false;
+    setCurrentScreen(0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const c = calculate();
   const annual = c.interpRevenue + c.consultRevenue + c.treatRevenue + (c.vitalTests * inputs.monitoring_rev);
 
+  useEffect(() => {
+    if (currentScreen === 3 && !savedRef.current) {
+      savedRef.current = true;
+      const isTest = localStorage.getItem("vsp_is_tester") === "1";
+      saveMutation.mutate(
+        {
+          data: {
+            email: calEmail || null,
+            calculatedUpside: c.total,
+            inputs: inputs as Record<string, unknown>,
+            isTest,
+          },
+        },
+        {}
+      );
+    }
+  }, [currentScreen]);
+
   const chartData = [
     { name: 'Interpretation', value: c.interpRevenue, fill: 'hsl(var(--primary))' },
-    { name: 'Follow-Up Consult', value: c.consultRevenue, fill: 'hsl(var(--primary))' }, // Different shade could be used
+    { name: 'Follow-Up Consult', value: c.consultRevenue, fill: 'hsl(var(--primary))' },
     { name: 'Downstream Treatment', value: c.treatRevenue, fill: 'hsl(var(--secondary))' },
     { name: 'Monitoring', value: c.monitorRevenue, fill: 'hsl(var(--primary) / 0.6)' },
   ];
@@ -114,37 +144,88 @@ export default function Hospitals() {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="bg-background border-b border-border sticky top-16 z-40">
-        <div className="container mx-auto px-4 max-w-4xl flex">
-          {[
-            { num: 1, title: "Your Lab", sub: "Current capacity" },
-            { num: 2, title: "Revenue Inputs", sub: "Fees & downstream" },
-            { num: 3, title: "Results", sub: "Your upside" }
-          ].map((step) => (
-            <div key={step.num} className="flex-1 py-4 flex items-center gap-3 relative pr-4">
-              {step.num !== 3 && (
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-border hidden sm:block"></div>
-              )}
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${
-                currentScreen === step.num ? 'bg-primary text-primary-foreground' : 
-                currentScreen > step.num ? 'bg-secondary text-foreground-foreground' : 'bg-muted text-muted-foreground'
-              }`}>
-                {step.num}
+      {/* Progress Bar — only shown during steps 1-3 */}
+      {currentScreen >= 1 && (
+        <div className="bg-background border-b border-border sticky top-16 z-40">
+          <div className="container mx-auto px-4 max-w-4xl flex">
+            {[
+              { num: 1, title: "Your Lab", sub: "Current capacity" },
+              { num: 2, title: "Revenue Inputs", sub: "Fees & downstream" },
+              { num: 3, title: "Results", sub: "Your upside" }
+            ].map((step) => (
+              <div key={step.num} className="flex-1 py-4 flex items-center gap-3 relative pr-4">
+                {step.num !== 3 && (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-[2px] bg-border hidden sm:block"></div>
+                )}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${
+                  currentScreen === step.num ? 'bg-primary text-primary-foreground' : 
+                  currentScreen > step.num ? 'bg-secondary text-foreground-foreground' : 'bg-muted text-muted-foreground'
+                }`}>
+                  {step.num}
+                </div>
+                <div className="hidden sm:block">
+                  <div className={`text-sm leading-tight transition-colors ${
+                    currentScreen === step.num ? 'text-primary font-bold' : 
+                    currentScreen > step.num ? 'text-foreground font-semibold' : 'text-muted-foreground'
+                  }`}>{step.title}</div>
+                  <div className="text-xs text-muted-foreground">{step.sub}</div>
+                </div>
               </div>
-              <div className="hidden sm:block">
-                <div className={`text-sm leading-tight transition-colors ${
-                  currentScreen === step.num ? 'text-primary font-bold' : 
-                  currentScreen > step.num ? 'text-foreground font-semibold' : 'text-muted-foreground'
-                }`}>{step.title}</div>
-                <div className="text-xs text-muted-foreground">{step.sub}</div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <main className="flex-grow container mx-auto px-4 max-w-3xl py-12">
+
+        {/* Step 0 — email prompt */}
+        {currentScreen === 0 && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col items-center text-center max-w-lg mx-auto">
+            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-lg">V</div>
+            </div>
+            <h2 className="text-3xl font-bold text-foreground mb-3 tracking-tight">See your institution's revenue upside</h2>
+            <p className="text-muted-foreground leading-relaxed mb-8">
+              Enter your work email to receive a copy of your results — or skip to run the numbers anonymously.
+            </p>
+            <div className="w-full bg-background rounded-2xl p-6 shadow-sm border border-border mb-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setCalEmail(calEmailInput.trim());
+                  setCurrentScreen(1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="flex flex-col gap-4"
+              >
+                <input
+                  type="email"
+                  value={calEmailInput}
+                  onChange={(e) => setCalEmailInput(e.target.value)}
+                  placeholder="you@childrenshospital.org"
+                  className="w-full h-12 px-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                />
+                <button
+                  type="submit"
+                  className="w-full bg-primary text-primary-foreground h-12 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                >
+                  Continue <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+            <button
+              onClick={() => {
+                setCalEmail("");
+                setCurrentScreen(1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+            >
+              Skip — run without email
+            </button>
+          </div>
+        )}
+
         {currentScreen === 1 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="mb-8">
@@ -341,7 +422,7 @@ export default function Hospitals() {
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
               <button 
-                onClick={() => { setCurrentScreen(3); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                onClick={goToResults}
                 className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-semibold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
               >
                 Calculate My Upside <ArrowRight className="w-4 h-4" />
@@ -430,8 +511,8 @@ export default function Hospitals() {
                         Interpretation
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-muted-foreground">{num(c.vitalTests)} tests × {fmtFull(inputs.interp_fee)}</td>
-                    <td className="py-4 pl-4 text-right font-bold text-foreground">{fmtFull(c.interpRevenue)}</td>
+                    <td className="py-4 px-4 text-muted-foreground font-mono text-xs">{num(c.vitalTests)} × ${inputs.interp_fee}</td>
+                    <td className="py-4 pl-4 text-right font-semibold text-foreground">{fmtFull(c.interpRevenue)}</td>
                   </tr>
                   <tr className="border-b border-border/50">
                     <td className="py-4 pr-4 font-semibold text-foreground">
@@ -440,8 +521,8 @@ export default function Hospitals() {
                         Follow-Up Consult
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-muted-foreground">{num(c.vitalTests)} tests × {fmtFull(inputs.consult_fee)}</td>
-                    <td className="py-4 pl-4 text-right font-bold text-foreground">{fmtFull(c.consultRevenue)}</td>
+                    <td className="py-4 px-4 text-muted-foreground font-mono text-xs">{num(c.vitalTests)} × ${inputs.consult_fee}</td>
+                    <td className="py-4 pl-4 text-right font-semibold text-foreground">{fmtFull(c.consultRevenue)}</td>
                   </tr>
                   <tr className="border-b border-border/50">
                     <td className="py-4 pr-4 font-semibold text-foreground">
@@ -450,21 +531,21 @@ export default function Hospitals() {
                         Downstream Treatment
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-muted-foreground">{num(c.vitalTests)} tests × {pct(inputs.referral_rate / 100)} ref × {fmtFull(inputs.treatment_rev)}</td>
-                    <td className="py-4 pl-4 text-right font-bold text-foreground">{fmtFull(c.treatRevenue)}</td>
+                    <td className="py-4 px-4 text-muted-foreground font-mono text-xs">{num(c.vitalTests)} × {pct(inputs.referral_rate/100)} × ${inputs.treatment_rev}</td>
+                    <td className="py-4 pl-4 text-right font-semibold text-foreground">{fmtFull(c.treatRevenue)}</td>
                   </tr>
-                  <tr>
+                  <tr className="border-b border-border/50">
                     <td className="py-4 pr-4 font-semibold text-foreground">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary/60 shrink-0"></div>
-                        Monitoring
+                        Monitoring ({inputs.years}yr)
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-muted-foreground">{num(c.vitalTests)} tests × {fmtFull(inputs.monitoring_rev)}/yr × {inputs.years} yrs</td>
-                    <td className="py-4 pl-4 text-right font-bold text-foreground">{fmtFull(c.monitorRevenue)}</td>
+                    <td className="py-4 px-4 text-muted-foreground font-mono text-xs">{num(c.vitalTests)} × ${inputs.monitoring_rev} × {inputs.years}yr</td>
+                    <td className="py-4 pl-4 text-right font-semibold text-foreground">{fmtFull(c.monitorRevenue)}</td>
                   </tr>
-                  <tr className="border-t-2 border-primary">
-                    <td className="py-4 pr-4 font-bold text-primary text-base">Total Revenue Upside</td>
+                  <tr className="bg-muted/30">
+                    <td className="py-4 pr-4 font-bold text-foreground">Total Upside</td>
                     <td className="py-4 px-4"></td>
                     <td className="py-4 pl-4 text-right font-extrabold text-primary text-lg">{fmtFull(c.total)}</td>
                   </tr>
@@ -472,30 +553,18 @@ export default function Hospitals() {
               </table>
             </div>
 
-            <p className="text-xs text-muted-foreground text-center mb-8 px-4 leading-relaxed">
-              These are estimates based on your inputs. Actual results will vary depending on payer mix,
-              coding and reimbursement timelines, patient case complexity, and clinical workflows.
-              This calculator is intended for illustrative purposes only.
-            </p>
-
-            {/* Demo Request CTA */}
+            {/* Demo CTA */}
             <div className="bg-background rounded-2xl p-6 md:p-8 shadow-sm border border-border mb-8">
               {demoSubmitted ? (
-                <div className="text-center py-6">
-                  <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-foreground mb-2">We'll be in touch.</h3>
-                  <p className="text-muted-foreground max-w-sm mx-auto">
-                    Thanks for your interest. A member of our team will reach out within one business day.
-                  </p>
+                <div className="flex flex-col items-center text-center py-8">
+                  <CheckCircle2 className="w-12 h-12 text-primary mb-4" />
+                  <h3 className="text-xl font-bold text-foreground mb-2">Request received!</h3>
+                  <p className="text-muted-foreground">We'll be in touch within one business day to schedule your personalized demo.</p>
                 </div>
               ) : (
                 <>
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-foreground mb-1">See it in action</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Ready to explore a partnership? Leave your details and we'll set up a live demo tailored to your institution.
-                    </p>
-                  </div>
+                  <h3 className="text-lg font-bold text-foreground mb-1">Ready to see it in action?</h3>
+                  <p className="text-sm text-muted-foreground mb-6">Request a 30-minute demo — we'll walk through exactly how the Vital Sleep Patch would work at your institution.</p>
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
