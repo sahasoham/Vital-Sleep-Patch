@@ -12,6 +12,7 @@ export function WaitlistForm() {
   const [name, setName] = useState("");
   const [forWhom, setForWhom] = useState<ForWhom>("child");
   const [age, setAge] = useState("");
+  const [ageError, setAgeError] = useState("");
   const { toast } = useToast();
 
   const joinWaitlist = useJoinWaitlist();
@@ -19,6 +20,12 @@ export function WaitlistForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+
+    if (forWhom === "myself" && age !== "" && Number(age) < 13) {
+      setAgeError('You must be 13 or older to sign up directly. If you are a parent or guardian, please select "For my child".');
+      return;
+    }
+    setAgeError("");
 
     joinWaitlist.mutate(
       { data: { email, name: name || null, childAge: age || null } },
@@ -31,6 +38,7 @@ export function WaitlistForm() {
           setEmail("");
           setName("");
           setAge("");
+          setAgeError("");
           setForWhom("child");
         },
         onError: (err: unknown) => {
@@ -71,7 +79,7 @@ export function WaitlistForm() {
         <div className="grid grid-cols-2 gap-3" data-testid="toggle-for-whom">
           <button
             type="button"
-            onClick={() => setForWhom("child")}
+            onClick={() => { setForWhom("child"); setAgeError(""); }}
             data-testid="toggle-for-child"
             className={`h-12 rounded-xl border text-sm font-medium transition-all ${
               forWhom === "child"
@@ -83,7 +91,7 @@ export function WaitlistForm() {
           </button>
           <button
             type="button"
-            onClick={() => setForWhom("myself")}
+            onClick={() => { setForWhom("myself"); setAgeError(""); }}
             data-testid="toggle-for-myself"
             className={`h-12 rounded-xl border text-sm font-medium transition-all ${
               forWhom === "myself"
@@ -130,14 +138,17 @@ export function WaitlistForm() {
         <Input
           id="age"
           type="number"
-          min={1}
+          min={forWhom === "myself" ? 13 : 1}
           max={25}
           placeholder={forWhom === "child" ? "e.g. 7" : "e.g. 16"}
           value={age}
-          onChange={(e) => setAge(e.target.value)}
-          className="h-12 bg-background border-border/60 focus-visible:ring-1 focus-visible:ring-foreground transition-shadow rounded-xl px-4 font-light"
+          onChange={(e) => { setAge(e.target.value); if (ageError) setAgeError(""); }}
+          className={`h-12 bg-background border-border/60 focus-visible:ring-1 focus-visible:ring-foreground transition-shadow rounded-xl px-4 font-light ${ageError ? "border-destructive focus-visible:ring-destructive" : ""}`}
           data-testid="input-age"
         />
+        {ageError && (
+          <p className="text-xs text-destructive leading-relaxed">{ageError}</p>
+        )}
       </div>
 
       <Button

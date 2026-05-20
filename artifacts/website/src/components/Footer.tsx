@@ -43,6 +43,9 @@ export function Footer() {
             <Link href="/" className="hover:text-background/80 transition-colors">Terms of Service</Link>
           </div>
         </div>
+        <p className="mt-4 text-center text-background/20 text-xs font-light">
+          This site is intended for adults. We do not knowingly collect information from children under 13.
+        </p>
       </div>
     </footer>
   );
