@@ -1,14 +1,11 @@
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { WaitlistForm } from "@/components/WaitlistForm";
-import { useGetWaitlistCount } from "@workspace/api-client-react";
 import { ArrowRight, Check, Shield, Activity, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 
 export default function Home() {
-  const { data: countData } = useGetWaitlistCount();
-
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } }
@@ -55,11 +52,6 @@ export default function Home() {
                   <a href="#waitlist" className="bg-foreground text-background px-10 py-5 rounded-full font-medium text-lg hover:bg-foreground/90 transition-all hover:scale-[1.02] inline-flex items-center gap-3 shadow-lg">
                     Join the waitlist <ArrowRight className="w-5 h-5" />
                   </a>
-                  {(countData?.count ?? 0) > 0 && (
-                    <p className="text-sm font-medium text-muted-foreground bg-white/50 px-4 py-2 rounded-full border border-border/50">
-                      Join <span className="text-foreground font-semibold">{countData?.count}</span> parents waiting
-                    </p>
-                  )}
                 </motion.div>
               </motion.div>
               
@@ -164,7 +156,7 @@ export default function Home() {
                   A single patch. <br/>Clinical-grade results.
                 </motion.h2>
                 <motion.p variants={fadeIn} className="text-xl text-muted-foreground mb-10 font-light leading-relaxed">
-                  The Vital Patch uses advanced micro-sensors to monitor breathing, oxygen levels, and heart rate all from a single, soft adhesive patch placed on the chest.
+                  The Vital Patch uses advanced micro-sensors to monitor breathing, oxygen levels, and heart rate all from a single, soft adhesive patch placed on your child's body.
                 </motion.p>
                 
                 <motion.ul variants={staggerContainer} className="space-y-6">
@@ -206,7 +198,7 @@ export default function Home() {
               
               {[
                 { step: "1", title: "Order the Kit", desc: "Prescribed by your doctor or ordered directly, the kit arrives at your door in days." },
-                { step: "2", title: "Apply at Bedtime", desc: "Simply place the soft patch on your child's chest before sleep. No wires to tangle." },
+                { step: "2", title: "Apply at Bedtime", desc: "Simply place the soft patch on your child's body before sleep. No wires to tangle." },
                 { step: "3", title: "Get Answers", desc: "Remove in the morning. A detailed clinical report is securely generated for your doctor." }
               ].map((item, i) => (
                 <motion.div 
