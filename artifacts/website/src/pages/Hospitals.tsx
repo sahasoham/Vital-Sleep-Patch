@@ -116,7 +116,7 @@ export default function Hospitals() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<number | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   const [memoOpen, setMemoOpen] = useState(false);
@@ -166,7 +166,7 @@ export default function Hospitals() {
     interpFiredRef.current = false;
     setInterpretation(null);
     setChatMessages([]);
-    setConversationId(null);
+    setSessionToken(null);
     setChatOpen(false);
     setMemoText(null);
     setMemoOpen(false);
@@ -234,7 +234,7 @@ export default function Hospitals() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          conversationId,
+          sessionToken,
           message,
           inputs,
           results: c,
@@ -255,8 +255,18 @@ export default function Hospitals() {
           if (!line.startsWith("data: ")) continue;
           try {
             const parsed = JSON.parse(line.slice(6));
-            if (parsed.conversationId && !conversationId) {
-              setConversationId(parsed.conversationId);
+            if (parsed.sessionToken && !sessionToken) {
+              setSessionToken(parsed.sessionToken);
+            }
+            if (parsed.error) {
+              setChatMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.streaming) {
+                  updated[updated.length - 1] = { ...last, content: "Sorry, something went wrong. Please try again.", streaming: false };
+                }
+                return updated;
+              });
             }
             if (parsed.content) {
               setChatMessages((prev) => {

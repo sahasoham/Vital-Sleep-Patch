@@ -98,7 +98,7 @@ export type CalcAiChatRequestResults = { [key: string]: unknown };
 
 export interface CalcAiChatRequest {
   /** @nullable */
-  conversationId?: number | null;
+  sessionToken?: string | null;
   message: string;
   inputs: CalcAiChatRequestInputs;
   results: CalcAiChatRequestResults;

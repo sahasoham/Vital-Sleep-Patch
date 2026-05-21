@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { randomUUID } from "crypto";
 import { db, conversations, messages } from "@workspace/db";
 import { anthropic } from "@workspace/integrations-anthropic-ai";
 import { CalcAiInterpretBody, CalcAiChatBody, CalcAiPitchMemoBody } from "@workspace/api-zod";
@@ -78,19 +79,37 @@ router.post("/calculator/ai/chat", async (req, res) => {
     return;
   }
 
-  const { conversationId, message: userMessage, inputs, results } = parsed.data;
+  const { sessionToken: clientToken, message: userMessage, inputs, results } = parsed.data;
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
   try {
-    let convId = conversationId ?? null;
+    let convId: number;
+    let sessionToken: string;
 
-    if (!convId) {
+    if (clientToken) {
+      // Look up conversation by the opaque session token — never trust a raw ID
+      const [existing] = await db
+        .select()
+        .from(conversations)
+        .where(eq(conversations.sessionToken, clientToken));
+
+      if (!existing) {
+        res.write(`data: ${JSON.stringify({ error: "Conversation not found", done: true })}\n\n`);
+        res.end();
+        return;
+      }
+
+      convId = existing.id;
+      sessionToken = clientToken;
+    } else {
+      // Create a new conversation with an unguessable session token
+      sessionToken = randomUUID();
       const [conv] = await db
         .insert(conversations)
-        .values({ title: "Calculator Chat" })
+        .values({ title: "Calculator Chat", sessionToken })
         .returning();
       convId = conv!.id;
     }
@@ -124,7 +143,7 @@ router.post("/calculator/ai/chat", async (req, res) => {
     for await (const event of stream) {
       if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
         fullResponse += event.delta.text;
-        res.write(`data: ${JSON.stringify({ content: event.delta.text, conversationId: convId })}\n\n`);
+        res.write(`data: ${JSON.stringify({ content: event.delta.text, sessionToken })}\n\n`);
       }
     }
 
@@ -134,11 +153,11 @@ router.post("/calculator/ai/chat", async (req, res) => {
       content: fullResponse,
     });
 
-    res.write(`data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`);
+    res.write(`data: ${JSON.stringify({ done: true, sessionToken })}\n\n`);
     res.end();
   } catch (err) {
     req.log.error({ err }, "Failed to stream AI chat response");
-    res.write(`data: ${JSON.stringify({ error: "AI chat failed" })}\n\n`);
+    res.write(`data: ${JSON.stringify({ error: "AI chat failed", done: true })}\n\n`);
     res.end();
   }
 });

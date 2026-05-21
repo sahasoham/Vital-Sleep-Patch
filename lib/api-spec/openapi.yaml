@@ -412,8 +412,8 @@ components:
       type: object
       required: [message, inputs, results]
       properties:
-        conversationId:
-          type: ["integer", "null"]
+        sessionToken:
+          type: ["string", "null"]
         message:
           type: string
         inputs:

@@ -115,7 +115,7 @@ export const CalcAiInterpretResponse = zod.object({
  * @summary Chat about calculator results (SSE streaming)
  */
 export const CalcAiChatBody = zod.object({
-  conversationId: zod.number().nullish(),
+  sessionToken: zod.string().nullish(),
   message: zod.string(),
   inputs: zod.record(zod.string(), zod.unknown()),
   results: zod.record(zod.string(), zod.unknown()),

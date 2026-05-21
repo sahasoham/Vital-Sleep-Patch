@@ -10,7 +10,7 @@ import type { CalcAiChatRequestResults } from "./calcAiChatRequestResults";
 
 export interface CalcAiChatRequest {
   /** @nullable */
-  conversationId?: number | null;
+  sessionToken?: string | null;
   message: string;
   inputs: CalcAiChatRequestInputs;
   results: CalcAiChatRequestResults;
