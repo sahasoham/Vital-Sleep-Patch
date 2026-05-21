@@ -47,6 +47,20 @@ const STARTER_QUESTIONS = [
   "What's the ROI timeline?",
 ];
 
+function InlineFormatted({ text }: { text: string }) {
+  const parts: React.ReactNode[] = [];
+  const boldRegex = /\*\*(.+?)\*\*/g;
+  let last = 0;
+  let match;
+  while ((match = boldRegex.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push(<strong key={match.index}>{match[1]}</strong>);
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
+}
+
 function MarkdownMemo({ text }: { text: string }) {
   const lines = text.split("\n");
   const elements: React.ReactNode[] = [];
@@ -65,17 +79,18 @@ function MarkdownMemo({ text }: { text: string }) {
       }
       elements.push(
         <ul key={`ul-${i}`} className="list-disc list-inside space-y-1 text-foreground mb-3 text-sm">
-          {items.map((it, j) => <li key={j}>{it}</li>)}
+          {items.map((it, j) => <li key={j}><InlineFormatted text={it} /></li>)}
         </ul>
       );
       continue;
     } else if (line.trim() === "") {
       elements.push(<div key={i} className="h-1" />);
     } else {
-      const formatted = line
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>');
-      elements.push(<p key={i} className="text-sm text-foreground leading-relaxed mb-2" dangerouslySetInnerHTML={{ __html: formatted }} />);
+      elements.push(
+        <p key={i} className="text-sm text-foreground leading-relaxed mb-2">
+          <InlineFormatted text={line} />
+        </p>
+      );
     }
     i++;
   }
@@ -640,25 +655,25 @@ export default function Hospitals() {
               </p>
             </div>
 
-            {/* AI Interpretation Callout */}
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 mb-6 flex gap-3">
-              <div className="shrink-0 mt-0.5">
-                <Sparkles className="w-5 h-5 text-primary" />
+            {/* AI Interpretation Callout — hidden when nothing to show */}
+            {(interpLoading || interpretation) && (
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 mb-6 flex gap-3">
+                <div className="shrink-0 mt-0.5">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  {interpLoading ? (
+                    <div className="space-y-2">
+                      <div className="h-4 bg-primary/10 rounded animate-pulse w-full"></div>
+                      <div className="h-4 bg-primary/10 rounded animate-pulse w-5/6"></div>
+                      <div className="h-4 bg-primary/10 rounded animate-pulse w-3/4"></div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-foreground leading-relaxed">{interpretation}</p>
+                  )}
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                {interpLoading ? (
-                  <div className="space-y-2">
-                    <div className="h-4 bg-primary/10 rounded animate-pulse w-full"></div>
-                    <div className="h-4 bg-primary/10 rounded animate-pulse w-5/6"></div>
-                    <div className="h-4 bg-primary/10 rounded animate-pulse w-3/4"></div>
-                  </div>
-                ) : interpretation ? (
-                  <p className="text-sm text-foreground leading-relaxed">{interpretation}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">AI summary unavailable.</p>
-                )}
-              </div>
-            </div>
+            )}
 
             {/* Headline Card */}
             <div className="bg-gradient-to-br from-secondary to-indigo-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden mb-8 shadow-xl">
