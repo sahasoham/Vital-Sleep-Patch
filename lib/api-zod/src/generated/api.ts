@@ -96,3 +96,41 @@ export const ToggleCalculatorSessionTestResponse = zod.object({
   isTest: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
+
+/**
+ * Returns a 2-3 sentence plain-English interpretation of the calculator results
+ * @summary Auto-interpret calculator results
+ */
+export const CalcAiInterpretBody = zod.object({
+  inputs: zod.record(zod.string(), zod.unknown()),
+  results: zod.record(zod.string(), zod.unknown()),
+});
+
+export const CalcAiInterpretResponse = zod.object({
+  text: zod.string(),
+});
+
+/**
+ * Sends a user message and streams an AI response. Persists conversation history.
+ * @summary Chat about calculator results (SSE streaming)
+ */
+export const CalcAiChatBody = zod.object({
+  conversationId: zod.number().nullish(),
+  message: zod.string(),
+  inputs: zod.record(zod.string(), zod.unknown()),
+  results: zod.record(zod.string(), zod.unknown()),
+});
+
+/**
+ * Generates a formatted one-pager pitch memo based on calculator results
+ * @summary Generate a pitch memo
+ */
+export const CalcAiPitchMemoBody = zod.object({
+  institution: zod.string().nullish(),
+  inputs: zod.record(zod.string(), zod.unknown()),
+  results: zod.record(zod.string(), zod.unknown()),
+});
+
+export const CalcAiPitchMemoResponse = zod.object({
+  memo: zod.string(),
+});

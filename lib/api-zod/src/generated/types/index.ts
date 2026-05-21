@@ -6,6 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./calcAiChatRequest";
+export * from "./calcAiChatRequestInputs";
+export * from "./calcAiChatRequestResults";
+export * from "./calcAiInterpretRequest";
+export * from "./calcAiInterpretRequestInputs";
+export * from "./calcAiInterpretRequestResults";
+export * from "./calcAiInterpretResult";
+export * from "./calcAiPitchMemoRequest";
+export * from "./calcAiPitchMemoRequestInputs";
+export * from "./calcAiPitchMemoRequestResults";
+export * from "./calcAiPitchMemoResult";
 export * from "./calculatorSession";
 export * from "./calculatorSessionInput";
 export * from "./calculatorSessionInputInputs";

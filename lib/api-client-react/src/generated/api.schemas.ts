@@ -79,6 +79,46 @@ export interface ErrorResponse {
   error: string;
 }
 
+export type CalcAiInterpretRequestInputs = { [key: string]: unknown };
+
+export type CalcAiInterpretRequestResults = { [key: string]: unknown };
+
+export interface CalcAiInterpretRequest {
+  inputs: CalcAiInterpretRequestInputs;
+  results: CalcAiInterpretRequestResults;
+}
+
+export interface CalcAiInterpretResult {
+  text: string;
+}
+
+export type CalcAiChatRequestInputs = { [key: string]: unknown };
+
+export type CalcAiChatRequestResults = { [key: string]: unknown };
+
+export interface CalcAiChatRequest {
+  /** @nullable */
+  conversationId?: number | null;
+  message: string;
+  inputs: CalcAiChatRequestInputs;
+  results: CalcAiChatRequestResults;
+}
+
+export type CalcAiPitchMemoRequestInputs = { [key: string]: unknown };
+
+export type CalcAiPitchMemoRequestResults = { [key: string]: unknown };
+
+export interface CalcAiPitchMemoRequest {
+  /** @nullable */
+  institution?: string | null;
+  inputs: CalcAiPitchMemoRequestInputs;
+  results: CalcAiPitchMemoRequestResults;
+}
+
+export interface CalcAiPitchMemoResult {
+  memo: string;
+}
+
 export type GetAdminCalculatorSessionsParams = {
   includeTest?: boolean;
 };

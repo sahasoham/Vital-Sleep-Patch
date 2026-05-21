@@ -17,6 +17,11 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  CalcAiChatRequest,
+  CalcAiInterpretRequest,
+  CalcAiInterpretResult,
+  CalcAiPitchMemoRequest,
+  CalcAiPitchMemoResult,
   CalculatorSession,
   CalculatorSessionInput,
   DemoRequest,
@@ -648,4 +653,265 @@ export const useToggleCalculatorSessionTest = <
   TContext
 > => {
   return useMutation(getToggleCalculatorSessionTestMutationOptions(options));
+};
+
+/**
+ * Returns a 2-3 sentence plain-English interpretation of the calculator results
+ * @summary Auto-interpret calculator results
+ */
+export const getCalcAiInterpretUrl = () => {
+  return `/api/calculator/ai/interpret`;
+};
+
+export const calcAiInterpret = async (
+  calcAiInterpretRequest: CalcAiInterpretRequest,
+  options?: RequestInit,
+): Promise<CalcAiInterpretResult> => {
+  return customFetch<CalcAiInterpretResult>(getCalcAiInterpretUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(calcAiInterpretRequest),
+  });
+};
+
+export const getCalcAiInterpretMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calcAiInterpret>>,
+    TError,
+    { data: BodyType<CalcAiInterpretRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof calcAiInterpret>>,
+  TError,
+  { data: BodyType<CalcAiInterpretRequest> },
+  TContext
+> => {
+  const mutationKey = ["calcAiInterpret"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof calcAiInterpret>>,
+    { data: BodyType<CalcAiInterpretRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return calcAiInterpret(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CalcAiInterpretMutationResult = NonNullable<
+  Awaited<ReturnType<typeof calcAiInterpret>>
+>;
+export type CalcAiInterpretMutationBody = BodyType<CalcAiInterpretRequest>;
+export type CalcAiInterpretMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Auto-interpret calculator results
+ */
+export const useCalcAiInterpret = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calcAiInterpret>>,
+    TError,
+    { data: BodyType<CalcAiInterpretRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof calcAiInterpret>>,
+  TError,
+  { data: BodyType<CalcAiInterpretRequest> },
+  TContext
+> => {
+  return useMutation(getCalcAiInterpretMutationOptions(options));
+};
+
+/**
+ * Sends a user message and streams an AI response. Persists conversation history.
+ * @summary Chat about calculator results (SSE streaming)
+ */
+export const getCalcAiChatUrl = () => {
+  return `/api/calculator/ai/chat`;
+};
+
+export const calcAiChat = async (
+  calcAiChatRequest: CalcAiChatRequest,
+  options?: RequestInit,
+): Promise<unknown> => {
+  return customFetch<unknown>(getCalcAiChatUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(calcAiChatRequest),
+  });
+};
+
+export const getCalcAiChatMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calcAiChat>>,
+    TError,
+    { data: BodyType<CalcAiChatRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof calcAiChat>>,
+  TError,
+  { data: BodyType<CalcAiChatRequest> },
+  TContext
+> => {
+  const mutationKey = ["calcAiChat"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof calcAiChat>>,
+    { data: BodyType<CalcAiChatRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return calcAiChat(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CalcAiChatMutationResult = NonNullable<
+  Awaited<ReturnType<typeof calcAiChat>>
+>;
+export type CalcAiChatMutationBody = BodyType<CalcAiChatRequest>;
+export type CalcAiChatMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Chat about calculator results (SSE streaming)
+ */
+export const useCalcAiChat = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calcAiChat>>,
+    TError,
+    { data: BodyType<CalcAiChatRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof calcAiChat>>,
+  TError,
+  { data: BodyType<CalcAiChatRequest> },
+  TContext
+> => {
+  return useMutation(getCalcAiChatMutationOptions(options));
+};
+
+/**
+ * Generates a formatted one-pager pitch memo based on calculator results
+ * @summary Generate a pitch memo
+ */
+export const getCalcAiPitchMemoUrl = () => {
+  return `/api/calculator/ai/pitch-memo`;
+};
+
+export const calcAiPitchMemo = async (
+  calcAiPitchMemoRequest: CalcAiPitchMemoRequest,
+  options?: RequestInit,
+): Promise<CalcAiPitchMemoResult> => {
+  return customFetch<CalcAiPitchMemoResult>(getCalcAiPitchMemoUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(calcAiPitchMemoRequest),
+  });
+};
+
+export const getCalcAiPitchMemoMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calcAiPitchMemo>>,
+    TError,
+    { data: BodyType<CalcAiPitchMemoRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof calcAiPitchMemo>>,
+  TError,
+  { data: BodyType<CalcAiPitchMemoRequest> },
+  TContext
+> => {
+  const mutationKey = ["calcAiPitchMemo"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof calcAiPitchMemo>>,
+    { data: BodyType<CalcAiPitchMemoRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return calcAiPitchMemo(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CalcAiPitchMemoMutationResult = NonNullable<
+  Awaited<ReturnType<typeof calcAiPitchMemo>>
+>;
+export type CalcAiPitchMemoMutationBody = BodyType<CalcAiPitchMemoRequest>;
+export type CalcAiPitchMemoMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Generate a pitch memo
+ */
+export const useCalcAiPitchMemo = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calcAiPitchMemo>>,
+    TError,
+    { data: BodyType<CalcAiPitchMemoRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof calcAiPitchMemo>>,
+  TError,
+  { data: BodyType<CalcAiPitchMemoRequest> },
+  TContext
+> => {
+  return useMutation(getCalcAiPitchMemoMutationOptions(options));
 };

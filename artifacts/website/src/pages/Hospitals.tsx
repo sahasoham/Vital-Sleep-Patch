@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Sparkles, Send, ChevronDown, ChevronUp, FileText, Copy, Printer, X } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useRequestDemo, useSaveCalculatorSession } from "@workspace/api-client-react";
 
@@ -35,6 +35,53 @@ function num(n: number) {
   return Math.round(n).toLocaleString();
 }
 
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  streaming?: boolean;
+}
+
+const STARTER_QUESTIONS = [
+  "What if my waitlist doubles?",
+  "How does this compare to a typical AMC?",
+  "What's the ROI timeline?",
+];
+
+function MarkdownMemo({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.startsWith("## ")) {
+      elements.push(<h2 key={i} className="text-lg font-bold text-foreground mt-6 mb-2">{line.slice(3)}</h2>);
+    } else if (line.startsWith("# ")) {
+      elements.push(<h1 key={i} className="text-xl font-extrabold text-foreground mt-4 mb-3">{line.slice(2)}</h1>);
+    } else if (line.startsWith("- ") || line.startsWith("* ")) {
+      const items: string[] = [];
+      while (i < lines.length && (lines[i].startsWith("- ") || lines[i].startsWith("* "))) {
+        items.push(lines[i].slice(2));
+        i++;
+      }
+      elements.push(
+        <ul key={`ul-${i}`} className="list-disc list-inside space-y-1 text-foreground mb-3 text-sm">
+          {items.map((it, j) => <li key={j}>{it}</li>)}
+        </ul>
+      );
+      continue;
+    } else if (line.trim() === "") {
+      elements.push(<div key={i} className="h-1" />);
+    } else {
+      const formatted = line
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>');
+      elements.push(<p key={i} className="text-sm text-foreground leading-relaxed mb-2" dangerouslySetInnerHTML={{ __html: formatted }} />);
+    }
+    i++;
+  }
+  return <div>{elements}</div>;
+}
+
 export default function Hospitals() {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [calEmail, setCalEmail] = useState("");
@@ -45,6 +92,23 @@ export default function Hospitals() {
   const demoMutation = useRequestDemo();
   const saveMutation = useSaveCalculatorSession();
   const savedRef = useRef(false);
+
+  const [interpretation, setInterpretation] = useState<string | null>(null);
+  const [interpLoading, setInterpLoading] = useState(false);
+  const interpFiredRef = useRef(false);
+
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<number | null>(null);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  const [memoOpen, setMemoOpen] = useState(false);
+  const [memoText, setMemoText] = useState<string | null>(null);
+  const [memoLoading, setMemoLoading] = useState(false);
+  const [memoInstitution, setMemoInstitution] = useState("");
+  const [memoCopied, setMemoCopied] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -71,7 +135,6 @@ export default function Hospitals() {
     const treatRevenue = vitalTests * (inputs.referral_rate / 100) * inputs.treatment_rev;
     const monitorRevenue = vitalTests * inputs.monitoring_rev * inputs.years;
     const total = interpRevenue + consultRevenue + treatRevenue + monitorRevenue;
-
     return { vitalTests, interpRevenue, consultRevenue, treatRevenue, monitorRevenue, total };
   };
 
@@ -85,6 +148,13 @@ export default function Hospitals() {
     setCalEmail("");
     setCalEmailInput("");
     savedRef.current = false;
+    interpFiredRef.current = false;
+    setInterpretation(null);
+    setChatMessages([]);
+    setConversationId(null);
+    setChatOpen(false);
+    setMemoText(null);
+    setMemoOpen(false);
     setCurrentScreen(0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -109,6 +179,135 @@ export default function Hospitals() {
       );
     }
   }, [currentScreen]);
+
+  useEffect(() => {
+    if (currentScreen === 3 && !interpFiredRef.current) {
+      interpFiredRef.current = true;
+      setInterpLoading(true);
+      fetch("/api/calculator/ai/interpret", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inputs, results: c }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.text) setInterpretation(data.text);
+        })
+        .catch(() => {})
+        .finally(() => setInterpLoading(false));
+    }
+  }, [currentScreen]);
+
+  useEffect(() => {
+    if (chatOpen && chatBottomRef.current) {
+      chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages, chatOpen]);
+
+  const sendChat = async (message: string) => {
+    if (!message.trim() || chatLoading) return;
+    const userMsg: ChatMessage = { role: "user", content: message };
+    setChatMessages((prev) => [...prev, userMsg]);
+    setChatInput("");
+    setChatLoading(true);
+
+    const assistantMsg: ChatMessage = { role: "assistant", content: "", streaming: true };
+    setChatMessages((prev) => [...prev, assistantMsg]);
+
+    try {
+      const response = await fetch("/api/calculator/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId,
+          message,
+          inputs,
+          results: c,
+        }),
+      });
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const parsed = JSON.parse(line.slice(6));
+            if (parsed.conversationId && !conversationId) {
+              setConversationId(parsed.conversationId);
+            }
+            if (parsed.content) {
+              setChatMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.streaming) {
+                  updated[updated.length - 1] = { ...last, content: last.content + parsed.content };
+                }
+                return updated;
+              });
+            }
+            if (parsed.done) {
+              setChatMessages((prev) => {
+                const updated = [...prev];
+                const last = updated[updated.length - 1];
+                if (last && last.streaming) {
+                  updated[updated.length - 1] = { ...last, streaming: false };
+                }
+                return updated;
+              });
+            }
+          } catch {}
+        }
+      }
+    } catch {
+      setChatMessages((prev) => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last && last.streaming) {
+          updated[updated.length - 1] = { ...last, content: "Sorry, something went wrong. Please try again.", streaming: false };
+        }
+        return updated;
+      });
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const generateMemo = async () => {
+    setMemoLoading(true);
+    setMemoText(null);
+    try {
+      const response = await fetch("/api/calculator/ai/pitch-memo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          institution: memoInstitution || null,
+          inputs,
+          results: c,
+        }),
+      });
+      const data = await response.json();
+      if (data.memo) setMemoText(data.memo);
+    } catch {
+      setMemoText("Failed to generate memo. Please try again.");
+    } finally {
+      setMemoLoading(false);
+    }
+  };
+
+  const copyMemo = async () => {
+    if (!memoText) return;
+    await navigator.clipboard.writeText(memoText);
+    setMemoCopied(true);
+    setTimeout(() => setMemoCopied(false), 2000);
+  };
 
   const chartData = [
     { name: 'Interpretation', value: c.interpRevenue, fill: 'hsl(var(--primary))' },
@@ -441,6 +640,26 @@ export default function Hospitals() {
               </p>
             </div>
 
+            {/* AI Interpretation Callout */}
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 mb-6 flex gap-3">
+              <div className="shrink-0 mt-0.5">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                {interpLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-4 bg-primary/10 rounded animate-pulse w-full"></div>
+                    <div className="h-4 bg-primary/10 rounded animate-pulse w-5/6"></div>
+                    <div className="h-4 bg-primary/10 rounded animate-pulse w-3/4"></div>
+                  </div>
+                ) : interpretation ? (
+                  <p className="text-sm text-foreground leading-relaxed">{interpretation}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">AI summary unavailable.</p>
+                )}
+              </div>
+            </div>
+
             {/* Headline Card */}
             <div className="bg-gradient-to-br from-secondary to-indigo-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden mb-8 shadow-xl">
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/30 rounded-full blur-3xl"></div>
@@ -452,50 +671,33 @@ export default function Hospitals() {
                 <div className="text-white/60 mb-6">Over {inputs.years} year{inputs.years !== 1 ? 's' : ''} of follow-up modeling</div>
                 
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-sm font-medium">
-                  {num(c.vitalTests)} Vital tests / year
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  {fmt(annual)} estimated annually
                 </div>
               </div>
             </div>
 
-            {/* Insights */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-                <div className="text-xs font-bold tracking-widest uppercase text-primary mb-1">Annual recurring</div>
-                <div className="text-2xl font-extrabold text-foreground">{fmt(annual)}</div>
-              </div>
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-                <div className="text-xs font-bold tracking-widest uppercase text-primary mb-1">Per-test revenue</div>
-                <div className="text-2xl font-extrabold text-foreground">{fmt(inputs.interp_fee + inputs.consult_fee)}</div>
-              </div>
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6">
-                <div className="text-xs font-bold tracking-widest uppercase text-primary mb-1">Tests per year</div>
-                <div className="text-2xl font-extrabold text-foreground">{num(c.vitalTests)}</div>
-              </div>
-            </div>
-
             {/* Chart */}
-            <div className="bg-background rounded-2xl p-6 shadow-sm border border-border mb-8">
+            <div className="bg-background rounded-2xl p-6 md:p-8 shadow-sm border border-border mb-6">
               <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-6">Revenue Breakdown</h3>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
-                    <XAxis type="number" tickFormatter={(val) => fmt(val)} axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
-                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--foreground))', fontSize: 13, fontWeight: 500}} width={140} />
-                    <Tooltip content={<CustomTooltip />} cursor={{fill: 'hsl(var(--muted))', opacity: 0.4}} />
-                    <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={36}>
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={60} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.5)' }} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={index} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
 
-            {/* Table */}
-            <div className="bg-background rounded-2xl p-6 shadow-sm border border-border mb-8 overflow-x-auto">
-              <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-6">Line-Item Detail</h3>
-              <table className="w-full text-sm">
+            {/* Breakdown Table */}
+            <div className="bg-background rounded-2xl p-6 md:p-8 shadow-sm border border-border mb-6 overflow-x-auto">
+              <h3 className="text-xs font-bold tracking-widest uppercase text-muted-foreground mb-6">Detailed Breakdown</h3>
+              <table className="w-full min-w-[400px]">
                 <thead>
                   <tr className="text-left text-xs font-bold tracking-widest uppercase text-muted-foreground border-b border-border">
                     <th className="pb-3 pr-4 font-bold">Line Item</th>
@@ -551,6 +753,83 @@ export default function Hospitals() {
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            {/* Chat Panel */}
+            <div className="bg-background rounded-2xl shadow-sm border border-border mb-6 overflow-hidden">
+              <button
+                onClick={() => setChatOpen((o) => !o)}
+                className="w-full flex items-center justify-between p-5 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-foreground text-sm">Ask the AI Advisor</div>
+                    <div className="text-xs text-muted-foreground">Ask questions about your results</div>
+                  </div>
+                </div>
+                {chatOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              </button>
+
+              {chatOpen && (
+                <div className="border-t border-border">
+                  {chatMessages.length === 0 && (
+                    <div className="p-4 pb-2">
+                      <p className="text-xs text-muted-foreground mb-3 font-medium">Try asking:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {STARTER_QUESTIONS.map((q) => (
+                          <button
+                            key={q}
+                            onClick={() => sendChat(q)}
+                            className="text-xs px-3 py-1.5 rounded-full border border-border bg-muted/40 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-colors font-medium"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="max-h-80 overflow-y-auto p-4 space-y-3">
+                    {chatMessages.map((msg, i) => (
+                      <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                          msg.role === "user"
+                            ? "bg-primary text-primary-foreground rounded-br-sm"
+                            : "bg-muted text-foreground rounded-bl-sm"
+                        }`}>
+                          {msg.content}
+                          {msg.streaming && (
+                            <span className="inline-block w-1 h-4 bg-current ml-1 animate-pulse rounded-full align-middle" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={chatBottomRef} />
+                  </div>
+
+                  <div className="p-4 border-t border-border flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(chatInput); } }}
+                      placeholder="Ask a question about your results…"
+                      disabled={chatLoading}
+                      className="flex-1 h-10 px-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm disabled:opacity-50"
+                    />
+                    <button
+                      onClick={() => sendChat(chatInput)}
+                      disabled={chatLoading || !chatInput.trim()}
+                      className="w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Demo CTA */}
@@ -657,9 +936,15 @@ export default function Hospitals() {
               >
                 Start Over
               </button>
+              <button
+                onClick={() => setMemoOpen(true)}
+                className="bg-secondary text-foreground px-6 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-secondary/90 transition-all shadow-md"
+              >
+                <FileText className="w-4 h-4" /> Generate Pitch Memo
+              </button>
               <button 
                 onClick={() => window.print()}
-                className="bg-secondary text-foreground px-6 py-2 rounded-xl font-semibold hover:bg-secondary/90 transition-all shadow-md"
+                className="bg-muted text-foreground px-6 py-2 rounded-xl font-semibold hover:bg-muted/80 transition-all"
               >
                 Print / Save PDF
               </button>
@@ -667,6 +952,78 @@ export default function Hospitals() {
           </div>
         )}
       </main>
+
+      {/* Pitch Memo Modal */}
+      {memoOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-background rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-border shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                <h2 className="font-bold text-foreground">Pitch Memo</h2>
+              </div>
+              <button
+                onClick={() => { setMemoOpen(false); setMemoText(null); }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {!memoText && !memoLoading && (
+              <div className="p-6">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Generate a formatted one-page memo you can share with hospital leadership. Optionally enter your institution name for personalization.
+                </p>
+                <input
+                  type="text"
+                  value={memoInstitution}
+                  onChange={(e) => setMemoInstitution(e.target.value)}
+                  placeholder="Institution name (optional)"
+                  className="w-full h-11 px-4 rounded-xl border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm mb-4"
+                />
+                <button
+                  onClick={generateMemo}
+                  className="w-full bg-primary text-primary-foreground h-11 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all"
+                >
+                  <Sparkles className="w-4 h-4" /> Generate Memo
+                </button>
+              </div>
+            )}
+
+            {memoLoading && (
+              <div className="flex flex-col items-center justify-center py-16 gap-4">
+                <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-muted-foreground">Generating your pitch memo…</p>
+              </div>
+            )}
+
+            {memoText && !memoLoading && (
+              <>
+                <div className="flex-1 overflow-y-auto p-6">
+                  <MarkdownMemo text={memoText} />
+                </div>
+                <div className="p-4 border-t border-border flex gap-3 shrink-0">
+                  <button
+                    onClick={copyMemo}
+                    className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl border border-border hover:bg-muted transition-colors text-sm font-semibold"
+                  >
+                    <Copy className="w-4 h-4" />
+                    {memoCopied ? "Copied!" : "Copy to Clipboard"}
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-semibold"
+                  >
+                    <Printer className="w-4 h-4" /> Print
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="border-t border-border bg-background py-6">
         <p className="text-center text-xs text-muted-foreground max-w-3xl mx-auto px-6">
           This calculator models projected revenue for planning purposes only. The Vital Sleep Patch is an investigational device not currently available for commercial deployment.
