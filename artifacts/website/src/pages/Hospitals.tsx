@@ -112,7 +112,7 @@ export default function Hospitals() {
   const [interpLoading, setInterpLoading] = useState(false);
   const interpFiredRef = useRef(false);
 
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(true);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
