@@ -171,7 +171,7 @@ export default function Hospitals() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const [memoOpen, setMemoOpen] = useState(false);
   const [memoText, setMemoText] = useState<string | null>(null);
@@ -268,8 +268,9 @@ export default function Hospitals() {
   }, [currentScreen]);
 
   useEffect(() => {
-    if (chatOpen && chatBottomRef.current) {
-      chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    if (chatOpen && chatScrollRef.current) {
+      const el = chatScrollRef.current;
+      el.scrollTop = el.scrollHeight;
     }
   }, [chatMessages, chatOpen]);
 
@@ -871,7 +872,7 @@ export default function Hospitals() {
                     </div>
                   )}
 
-                  <div className="max-h-80 overflow-y-auto p-4 space-y-3">
+                  <div ref={chatScrollRef} className="max-h-80 overflow-y-auto p-4 space-y-3">
                     {chatMessages.map((msg, i) => (
                       <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                         <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
@@ -887,7 +888,7 @@ export default function Hospitals() {
                         </div>
                       </div>
                     ))}
-                    <div ref={chatBottomRef} />
+                    <div />
                   </div>
 
                   <div className="p-4 border-t border-border flex gap-2">
