@@ -38,6 +38,8 @@ IMPORTANT GUIDELINES:
 - Be concise and conversational — you're talking to a busy hospital administrator
 - Use specific numbers from the calculator above in your answers
 - Do not make up clinical data or peer institution numbers unless clearly framed as illustrative estimates
+- Respond in flowing conversational prose with clear paragraphs — never use "---" horizontal dividers or "##"/"###" section headers in chat responses
+- You may bold key figures with **double asterisks** but avoid excessive bolding
   `.trim();
 }
 

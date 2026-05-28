@@ -61,6 +61,60 @@ function InlineFormatted({ text }: { text: string }) {
   return <>{parts}</>;
 }
 
+function MarkdownChat({ text, streaming }: { text: string; streaming?: boolean }) {
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.trim() === "---" || line.trim() === "***" || line.trim() === "___") {
+      i++;
+      continue;
+    }
+    if (line.startsWith("### ") || line.startsWith("## ") || line.startsWith("# ")) {
+      const text = line.replace(/^#{1,3} /, "");
+      elements.push(
+        <p key={i} className="text-sm font-semibold leading-relaxed mt-2 mb-1">
+          <InlineFormatted text={text} />
+        </p>
+      );
+    } else if (line.startsWith("- ") || line.startsWith("* ")) {
+      const items: string[] = [];
+      while (i < lines.length && (lines[i].startsWith("- ") || lines[i].startsWith("* "))) {
+        items.push(lines[i].slice(2));
+        i++;
+      }
+      elements.push(
+        <ul key={`ul-${i}`} className="list-disc list-inside space-y-0.5 my-1.5">
+          {items.map((it, j) => (
+            <li key={j} className="text-sm leading-relaxed">
+              <InlineFormatted text={it} />
+            </li>
+          ))}
+        </ul>
+      );
+      continue;
+    } else if (line.trim() === "") {
+      if (elements.length > 0) elements.push(<div key={i} className="h-1.5" />);
+    } else {
+      elements.push(
+        <p key={i} className="text-sm leading-relaxed">
+          <InlineFormatted text={line} />
+        </p>
+      );
+    }
+    i++;
+  }
+  return (
+    <div className="space-y-0.5">
+      {elements}
+      {streaming && (
+        <span className="inline-block w-1 h-3.5 bg-current ml-0.5 animate-pulse rounded-full align-middle" />
+      )}
+    </div>
+  );
+}
+
 function MarkdownMemo({ text }: { text: string }) {
   const lines = text.split("\n");
   const elements: React.ReactNode[] = [];
@@ -679,7 +733,7 @@ export default function Hospitals() {
                       <div className="h-4 bg-primary/10 rounded animate-pulse w-3/4"></div>
                     </div>
                   ) : (
-                    <p className="text-sm text-foreground leading-relaxed">{interpretation}</p>
+                    <MarkdownChat text={interpretation!} />
                   )}
                 </div>
               </div>
@@ -820,14 +874,15 @@ export default function Hospitals() {
                   <div className="max-h-80 overflow-y-auto p-4 space-y-3">
                     {chatMessages.map((msg, i) => (
                       <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                           msg.role === "user"
                             ? "bg-primary text-primary-foreground rounded-br-sm"
                             : "bg-muted text-foreground rounded-bl-sm"
                         }`}>
-                          {msg.content}
-                          {msg.streaming && (
-                            <span className="inline-block w-1 h-4 bg-current ml-1 animate-pulse rounded-full align-middle" />
+                          {msg.role === "user" ? (
+                            <p className="text-sm leading-relaxed">{msg.content}</p>
+                          ) : (
+                            <MarkdownChat text={msg.content} streaming={msg.streaming} />
                           )}
                         </div>
                       </div>
